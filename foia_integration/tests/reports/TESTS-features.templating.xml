@@ -1,0 +1,52 @@
+<testsuite errors="0" failures="3" hostname="maxubuntu-Inspiron-5585" name="features.templating.FOIA Template to Email" skipped="0" tests="3" time="0.0" timestamp="2020-08-11T22:32:32.156602"><testcase classname="features.templating.FOIA Template to Email" name="Jason wants to add a special template for Arizona so he can cite particular" status="failed" time="0"><failure message="None" type="NoneType">
+<![CDATA[
+Failing step: Given Jason has particular language he uses when filing requests in Arizona ... undefined in 0.000s
+Location: tests/acceptance/features/templating.feature:16
+None]]>
+</failure><system-out>
+<![CDATA[
+@scenario.begin
+  Scenario: Jason wants to add a special template for Arizona so he can cite particular
+    Given Jason has particular language he uses when filing requests in Arizona ... undefined in 0.000s
+    When Jason adds template language into a templating form on the FOIA site ... undefined in 0.000s
+    Then the FOIA request system should store a record showing the language he uses for Arizona requests. ... undefined in 0.000s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase><testcase classname="features.templating.FOIA Template to Email" name="Jason wants to file a public records request in Arizona." status="failed" time="0"><failure message="None" type="NoneType">
+<![CDATA[
+Failing step: Given Jason has uploaded a valid template for Arizona ... undefined in 0.000s
+Location: tests/acceptance/features/templating.feature:21
+None]]>
+</failure><system-out>
+<![CDATA[
+@scenario.begin
+  Scenario: Jason wants to file a public records request in Arizona.
+    Given Jason has uploaded a valid template for Arizona ... undefined in 0.000s
+    When he enters valid information about who he plans to send the request to, what records he's seeking, and a general description of the request ... undefined in 0.000s
+    Then the FOIA request system will fill out his Arizona template ... undefined in 0.000s
+    And it will send the request to the intended recipient ... undefined in 0.000s
+    And it will store a record of the request so Jason can keep track of it. ... undefined in 0.000s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase><testcase classname="features.templating.FOIA Template to Email" name="Jason has a generic template he uses in states where he doesn't usually file" status="failed" time="0"><failure message="None" type="NoneType">
+<![CDATA[
+Failing step: When Jason goes to file a records request in Alaska ... undefined in 0.000s
+Location: tests/acceptance/features/templating.feature:29
+None]]>
+</failure><system-out>
+<![CDATA[
+@scenario.begin
+  Scenario: Jason has a generic template he uses in states where he doesn't usually file
+    When Jason goes to file a records request in Alaska ... undefined in 0.000s
+    And he has uploaded a generic template ... undefined in 0.000s
+    But he doesn't have a template for Alaska ... undefined in 0.000s
+    Then the FOIA request system will use his generic template to file the request. ... undefined in 0.000s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase></testsuite>

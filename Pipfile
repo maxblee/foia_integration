@@ -18,6 +18,7 @@ nox = "*"
 behave-django = "*"
 django-debug-toolbar = "*"
 faker = "*"
+mock = "*"
 
 [packages]
 django = "*"

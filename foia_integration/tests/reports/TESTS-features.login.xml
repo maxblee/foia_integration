@@ -1,0 +1,17 @@
+<testsuite errors="0" failures="1" hostname="maxubuntu-Inspiron-5585" name="features.login.Login" skipped="0" tests="1" time="0.0" timestamp="2020-08-11T22:33:12.532352"><testcase classname="features.login.Login" name="Users who are not logged in should see a log-in screen on the home page." status="failed" time="0"><failure message="None" type="NoneType">
+<![CDATA[
+Failing step: Given I am not logged in ... undefined in 0.000s
+Location: tests/acceptance/features/login.feature:8
+None]]>
+</failure><system-out>
+<![CDATA[
+@scenario.begin
+  Scenario: Users who are not logged in should see a log-in screen on the home page.
+    Given I am not logged in ... undefined in 0.000s
+    When I visit the home page ... undefined in 0.000s
+    Then I should see a screen telling me to log in ... undefined in 0.000s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase></testsuite>
