@@ -1,0 +1,26 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = "==19.10b0"
+pytest = "*"
+pytest-cov = "*"
+pytest-django = "*"
+mypy = "*"
+flake8 = "*"
+hypothesis = "*"
+selenium = "*"
+axe-selenium-python = "*"
+selenium-wire = "*"
+nox = "*"
+behave-django = "*"
+django-debug-toolbar = "*"
+faker = "*"
+
+[packages]
+django = "*"
+
+[requires]
+python_version = "3.7"
