@@ -1,0 +1,11 @@
+{% extends "base_generic.html" %}
+{% load socialaccount %}
+{% block page_title %}{% if user.is_authenticated %}Home{% else %}Log In{% endif %}{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<h1>Hello, {{user.username}}</h1>
+{% else %}
+<a href="{% provider_login_url 'google' %}">Log in with Google.</a>
+{% endif %}
+{% endblock %}

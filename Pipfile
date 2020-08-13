@@ -19,9 +19,12 @@ behave-django = "*"
 django-debug-toolbar = "*"
 faker = "*"
 mock = "*"
+bs4 = "*"
 
 [packages]
 django = "*"
+psycopg2 = "*"
+django-allauth = "*"
 
 [requires]
 python_version = "3.7"

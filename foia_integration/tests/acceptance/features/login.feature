@@ -7,12 +7,12 @@ Feature: Login
     Scenario: Users who are not logged in should see a log-in screen on the home page.
         Given I am not logged in
         When I visit the home page
-        Then I should see a screen telling me to log in
+        Then I should see the login page.
 
     Scenario: Users who are logged in should see a different page.
         Given I am logged in
         When I visit the home page
-        Then I should see a different page.
+        Then I should see the home page.
 
     # Scenario: Logged-in users should see utilities to add public records templates
     # and to file public records requests.
