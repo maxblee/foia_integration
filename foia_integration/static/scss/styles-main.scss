@@ -1,0 +1,14 @@
+// Structure adapted from https://matthewelsom.com/blog/simple-scss-playbook.html
+@charset "utf-8";
+
+// Variables, mixins, fonts, etc.
+@import "abstracts/_abstracts-main";
+
+// Global setup (e.g. body settings)
+@import "globals/_globals-main";
+
+// Components (e.g. buttons, menu accordians, etc.)
+@import "components/_components-main";
+
+// Layouts (headers, footers, etc.)
+@import "layouts/_layouts-main";

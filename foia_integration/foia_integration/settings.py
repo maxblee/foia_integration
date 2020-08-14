@@ -142,6 +142,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static"
+]
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
@@ -161,7 +164,8 @@ SOCIALACCOUNT_PROVIDERS = {
             "https://www.google.com/m8/feeds"
         ],
         "AUTH_PARAMS": {
-            "access_type": "online"
+            # needed for refresh token
+            "access_type": "offline"
         }
     }
 }

@@ -1,0 +1,44 @@
+.navbar__menu {
+    display: flex;
+    justify-content: space-between;
+    font-size: $font-med;
+    top: 0;
+}
+
+.navbar__section {
+    display: flex;
+    list-style: none;
+    justify-content: space-evenly;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar__item {
+    min-width: 200px;
+
+    & a {
+        padding-right: 1em;
+        display: block;
+        height: 100%;
+        color: black;
+        position: relative;
+
+        &:hover, &:focus {
+            background: $orange;
+        }
+    }
+}
+
+.navbar__link__bottom {
+    position: absolute;
+    right: 1rem;
+    bottom: 0.75rem;
+}
+
+.banner__main {
+    width: 100%;
+    background-color: $light-gray;
+    margin: 0;
+    padding-bottom: 25px;
+}
+

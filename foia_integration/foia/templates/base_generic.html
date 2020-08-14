@@ -1,12 +1,34 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{%block page_title%}{% endblock %} | FOIA Integration</title>
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" />
+    <link rel="stylesheet" href="{% static 'css/styles-main.css' %}"/>
+    {% block extra_heads %}{% endblock %}
 </head>
 <body>
+    <nav class="navbar__menu">
+        <ul class="navbar__section">
+            <li class="navbar__item">
+                <a href="/">
+                    <!-- Generator: Gravit.io -->
+                    <!-- Altered fill to currentColor and placed svg inline  -->
+                    <svg role="img" title="FOIA Integration Home Page" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="isolation:isolate" viewBox="0 0 800 200" width="160pt" height="50pt"><defs><clipPath id="_clipPath_esK9iN6o4JhvGzvTcTCErc6oN9cCgr69"><rect width="800" height="200"/></clipPath></defs><g clip-path="url(#_clipPath_esK9iN6o4JhvGzvTcTCErc6oN9cCgr69)"><mask id="_mask_P6hDJmq1ujZkj0CuGJD5lvwPxO5NRm31"><path d=" M 147 74.682 L 147 80.491 L 147 80.491 C 155.63 82.768 162 90.633 162 99.974 L 162 172.852 C 162 183.972 152.972 193 141.852 193 L 71.148 193 C 60.028 193 51 183.972 51 172.852 L 51 99.974 C 51 90.633 57.37 82.768 66 80.491 L 66 24.662 C 66 13.81 74.81 5 85.662 5 L 85.662 5 L 127.338 5 C 138.19 5 147 13.81 147 24.662 L 147 39.607 L 132 39.607 L 132 33.915 C 132 26.216 125.749 19.965 118.051 19.965 L 92.949 19.965 L 92.949 19.965 C 85.251 19.965 79 26.216 79 33.915 L 79 79.826 L 132 79.826 L 132 79.826 L 132 74.682 L 147 74.682 Z " fill-rule="evenodd" fill="white" stroke="none"/></mask><path d=" M 147 74.682 L 147 80.491 L 147 80.491 C 155.63 82.768 162 90.633 162 99.974 L 162 172.852 C 162 183.972 152.972 193 141.852 193 L 71.148 193 C 60.028 193 51 183.972 51 172.852 L 51 99.974 C 51 90.633 57.37 82.768 66 80.491 L 66 24.662 C 66 13.81 74.81 5 85.662 5 L 85.662 5 L 127.338 5 C 138.19 5 147 13.81 147 24.662 L 147 39.607 L 132 39.607 L 132 33.915 C 132 26.216 125.749 19.965 118.051 19.965 L 92.949 19.965 L 92.949 19.965 C 85.251 19.965 79 26.216 79 33.915 L 79 79.826 L 132 79.826 L 132 79.826 L 132 74.682 L 147 74.682 Z " fill-rule="evenodd" fill="rgb(153,0,255)"/><path d=" M 147 74.682 L 147 80.491 L 147 80.491 C 155.63 82.768 162 90.633 162 99.974 L 162 172.852 C 162 183.972 152.972 193 141.852 193 L 71.148 193 C 60.028 193 51 183.972 51 172.852 L 51 99.974 C 51 90.633 57.37 82.768 66 80.491 L 66 24.662 C 66 13.81 74.81 5 85.662 5 L 85.662 5 L 127.338 5 C 138.19 5 147 13.81 147 24.662 L 147 39.607 L 132 39.607 L 132 33.915 C 132 26.216 125.749 19.965 118.051 19.965 L 92.949 19.965 L 92.949 19.965 C 85.251 19.965 79 26.216 79 33.915 L 79 79.826 L 132 79.826 L 132 79.826 L 132 74.682 L 147 74.682 Z " fill-rule="evenodd" fill="rgb(153,0,255)" mask="url(#_mask_P6hDJmq1ujZkj0CuGJD5lvwPxO5NRm31)" vector-effect="non-scaling-stroke" stroke-width="2" stroke="rgb(0,0,0)" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3"/><g clip-path="url(#_clipPath_X6atArYmbHNm3vzID96UCVsjuhWX5GYC)"><text transform="matrix(1,0,0,1,170,100.25)" style="font-family:'Courier Prime';font-weight:400;font-size:72px;font-style:normal;fill:currentColor;stroke:none;">FOIA</text><text transform="matrix(1,0,0,1,170,181.109)" style="font-family:'Courier Prime';font-weight:400;font-size:72px;font-style:normal;fill:currentColor;stroke:none;">Integration</text></g><defs><clipPath id="_clipPath_X6atArYmbHNm3vzID96UCVsjuhWX5GYC"><rect x="0" y="0" width="616" height="156" transform="matrix(1,0,0,1,170,44)"/></clipPath></defs></g></svg>
+                </a>
+            </li>
+        </ul>
+        <ul class="navbar__section">
+            <li class="navbar__item"><a href="/"><span class="navbar__link__bottom">Hello</span></a></li>
+            <li class="navbar__item"><a href="#"><span class="navbar__link__bottom">Goodbye</span></a></li>
+        </ul>
+    </nav>
     <main id="main">
+        <div class="banner__main">
+            {% block banner %}{% endblock %}
+        </div>
         {% block content %}{% endblock %}
     </main> 
 </body>

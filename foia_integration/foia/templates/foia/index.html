@@ -1,11 +1,70 @@
 {% extends "base_generic.html" %}
 {% load socialaccount %}
+{% load account %}
+{% load static %}
+
 {% block page_title %}{% if user.is_authenticated %}Home{% else %}Log In{% endif %}{% endblock %}
+
+{% block extra_heads %}
+<style>
+    .login__google {
+        background: url("{% static 'images/google_signin/btn_google_signin_light_normal_web@2x.png'%}");
+        background-repeat: no-repeat;
+        width: 382px;
+        height: 92px;
+        display: inline-block;
+    }
+    .login__google:focus, .login__google:hover {
+        background: url("{% static 'images/google_signin/btn_google_signin_light_focus_web@2x.png'%}");
+    }
+    .login__google:active {
+        background: url("{% static 'images/google_signin/btn_google_signin_light_pressed_web@2x.png'%}");
+    }
+    .login__google:disabled {
+        background: url("{% static 'images/google_signin/btn_google_signin_light_pressed_web@2x.png'%}");
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .login__google {
+        background: url("{% static 'images/google_signin/btn_google_signin_dark_normal_web@2x.png'%}");
+    }
+    .login__google:focus, .login__google:hover {
+        background: url("{% static 'images/google_signin/btn_google_signin_dark_focus_web@2x.png'%}");
+    }
+    .login__google:active {
+        background: url("{% static 'images/google_signin/btn_google_signin_dark_pressed_web@2x.png'%}");
+    }
+    .login__google:disabled {
+        background: url("{% static 'images/google_signin/btn_google_signin_dark_pressed_web@2x.png'%}");
+    }
+    }
+</style>
+{% endblock %}
+
+{% block banner %}
+{% if user.is_authenticated %}
+<h1>Hello, {% user_display user %}</h1>
+{% else %}
+<h1>FOIA Integration</h1>
+{% endif %}
+{% endblock %}
 
 {% block content %}
 {% if user.is_authenticated %}
-<h1>Hello, {{user.username}}</h1>
 {% else %}
-<a href="{% provider_login_url 'google' %}">Log in with Google.</a>
+<p class="lead">FOIA Integration is a tool designed to help you file and keep track of your public records requests. To get started,
+     log in using a Google account below.</p>
+<div class="login__flex__container">
+    <div class="login__container">
+        <h2>Sign In</h2>
+        <p>
+            This application reads through messages in your GMail account, reads your contact list, and sends you messages
+        on your behalf. Because of this, it is highly recommended that you only use this GMail account for filing public records requests,
+        due to privacy concerns and because using this account for other things might make the application less useful.
+        </p>
+        <a href="{% provider_login_url 'google' %}" class="login__google" aria-label="Log into Google.">
+        </a>
+    </div>
+</div>
 {% endif %}
 {% endblock %}

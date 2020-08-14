@@ -1,0 +1,22 @@
+// media queries
+
+@mixin phone-media {
+    @media (max-width: 499px) { @content; }
+}
+
+@mixin tablet-media-up {
+    @media (min-width: 500px) { @content; }
+}
+
+@mixin tablet-media-only {
+    @media (min-width: 500px) and (max-width: 899px) { @content; }
+}
+
+@mixin  desktop-only {
+    @media (min-width: 900px) { @content; }
+}
+
+// dark mode
+@mixin dark-mode {
+    @media (prefers-color-scheme: dark) { @content; }
+}
