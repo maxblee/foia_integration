@@ -51,6 +51,7 @@
 
 {% block content %}
 {% if user.is_authenticated %}
+<p class="lead">You have around {{num_unread}} unread messages in your inbox.</p>
 {% else %}
 <p class="lead">FOIA Integration is a tool designed to help you file and keep track of your public records requests. To get started,
      log in using a Google account below.</p>

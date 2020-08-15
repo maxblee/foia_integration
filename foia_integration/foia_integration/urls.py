@@ -17,8 +17,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 
+from foia import views as app_views
+
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="foia/index.html")),
+    path("", app_views.app_index, name="index"),
     path('admin/', admin.site.urls),
     path("accounts", include("allauth.urls"))
 ]
