@@ -1,3 +1,6 @@
+// general immports
+@use "sass:color";
+
 .navbar__menu {
     display: flex;
     justify-content: space-between;
@@ -40,5 +43,21 @@
     background-color: $light-gray;
     margin: 0;
     padding-bottom: 25px;
+}
+
+@include dark-mode {
+    .navbar__item {
+        & a {
+            color: $light;
+
+            &:hover, &:focus {
+                background: color.scale($orange, $lightness: -50%);
+            }
+        }
+    }
+
+    .banner__main {
+        background-color: color.scale($light-gray, $lightness: -50%);
+    }
 }
 

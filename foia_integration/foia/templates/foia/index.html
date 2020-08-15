@@ -2,44 +2,8 @@
 {% load socialaccount %}
 {% load account %}
 {% load static %}
-
 {% block page_title %}{% if user.is_authenticated %}Home{% else %}Log In{% endif %}{% endblock %}
 
-{% block extra_heads %}
-<style>
-    .login__google {
-        background: url("{% static 'images/google_signin/btn_google_signin_light_normal_web@2x.png'%}");
-        background-repeat: no-repeat;
-        width: 382px;
-        height: 92px;
-        display: inline-block;
-    }
-    .login__google:focus, .login__google:hover {
-        background: url("{% static 'images/google_signin/btn_google_signin_light_focus_web@2x.png'%}");
-    }
-    .login__google:active {
-        background: url("{% static 'images/google_signin/btn_google_signin_light_pressed_web@2x.png'%}");
-    }
-    .login__google:disabled {
-        background: url("{% static 'images/google_signin/btn_google_signin_light_pressed_web@2x.png'%}");
-    }
-
-    @media (prefers-color-scheme: dark) {
-        .login__google {
-        background: url("{% static 'images/google_signin/btn_google_signin_dark_normal_web@2x.png'%}");
-    }
-    .login__google:focus, .login__google:hover {
-        background: url("{% static 'images/google_signin/btn_google_signin_dark_focus_web@2x.png'%}");
-    }
-    .login__google:active {
-        background: url("{% static 'images/google_signin/btn_google_signin_dark_pressed_web@2x.png'%}");
-    }
-    .login__google:disabled {
-        background: url("{% static 'images/google_signin/btn_google_signin_dark_pressed_web@2x.png'%}");
-    }
-    }
-</style>
-{% endblock %}
 
 {% block banner %}
 {% if user.is_authenticated %}
@@ -50,11 +14,18 @@
 {% endblock %}
 
 {% block content %}
-{% if user.is_authenticated %}
-<p class="lead">You have around {{num_unread}} unread messages in your inbox.</p>
-{% else %}
-<p class="lead">FOIA Integration is a tool designed to help you file and keep track of your public records requests. To get started,
-     log in using a Google account below.</p>
+<div class="lead__container">
+    {% if user.is_authenticated %}
+    {% if has_google_service %}
+    <p class="lead">You have around {{num_unread}} unread messages in your inbox.</p>
+    {% else %}
+    {% endif %}
+    {% else %}
+    <p class="lead">FOIA Integration is a tool designed to help you file and keep track of your public records requests. To get started,
+         log in using a Google account below.</p>
+    {% endif %}
+</div>
+{% if not user.is_authenticated %}
 <div class="login__flex__container">
     <div class="login__container">
         <h2>Sign In</h2>

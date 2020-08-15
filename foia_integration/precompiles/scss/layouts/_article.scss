@@ -1,0 +1,13 @@
+.lead {
+    font-size: $font-lead;
+    padding: 1rem;
+}
+
+@include desktop-only {
+
+    .lead__container {
+        width: 80%;
+        margin: auto;
+        text-align: center;
+    }
+}

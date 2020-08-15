@@ -1,0 +1,17 @@
+@import "./mixins";
+
+@include font-face("Montserrat-Light", "../fonts/Montserrat-Light.ttf", "truetype");
+@include font-face("Montserrat-Medium", "../fonts/Montserrat-Medium.ttf", "truetype");
+@include font-face("Montserrat-SemiBold", "../fonts/Montserrat-SemiBold.ttf", "truetype");
+@include font-face("Montserrat-Bold", "../fonts/Montserrat-Bold.ttf", "truetype");
+@include font-face("Montserrat-Italic", "../fonts/Montserrat-Italic.ttf", "truetype");
+@include font-face("Montserrat-BoldItalic", "../fonts/Montserrat-BoldItalic.ttf", "truetype");
+
+$font-main: "Montserrat-Medium", Arial, Helvetica, sans-serif;
+$font-light: "Montserrat-Light", Arial, Helvetica, sans-serif;
+// NOTE: Despite the fact that italic and bold fonts are special families, should make sure that
+// you also include font-weight and font-style properties to ensure the fallbacks work as intended
+$font-heading: "Montserrat-SemiBold", "Arial Narrow Bold", Arial, Helvetica, sans-serif;
+$font-italic: "Montserrat-Italic", Arial, Helvetica, sans-serif;
+$font-bolditalic: "Montserrat-BoldItalic", Arial, Helvetica, sans-serif;
+$font-bold: "Montserrat-Bold", Arial, Helvetica, sans-serif;

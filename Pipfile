@@ -25,7 +25,6 @@ bs4 = "*"
 django = "*"
 psycopg2 = "*"
 django-allauth = "*"
-requests-oauthlib = "*"
 google-auth = "*"
 google-api-python-client = "*"
 

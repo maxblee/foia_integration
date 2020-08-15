@@ -1,3 +1,4 @@
+
 // media queries
 
 @mixin phone-media {
@@ -19,4 +20,14 @@
 // dark mode
 @mixin dark-mode {
     @media (prefers-color-scheme: dark) { @content; }
+}
+
+// font handling
+@mixin font-face($font-family, $url, $format, $weight: initial, $style: initial) {
+    @font-face {
+        font-family: $font-family;
+        font-style: $style;
+        font-weight: $weight;
+        src: url($url) format($format);
+    }
 }

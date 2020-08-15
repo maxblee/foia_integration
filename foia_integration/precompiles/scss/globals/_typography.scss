@@ -1,14 +1,14 @@
-.lead {
-    font-size: $font-lead;
-}
-
 h1, h2, h3, h4, h5, h6 {
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-family: $font-heading;
 }
 
 h1 {
     font-size: $font-large;
     text-align: center;
+}
+
+nav {
+    font-family: $font-light;
 }
 
 p {

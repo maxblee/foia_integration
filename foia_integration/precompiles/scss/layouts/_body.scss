@@ -9,3 +9,10 @@ body {
     font-family: $font-main;
     font-size: $font-small;
 }
+
+@include dark-mode {
+    body {
+        background: $dark;
+        color: $light;
+    }
+}
