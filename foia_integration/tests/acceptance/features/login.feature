@@ -32,17 +32,9 @@ Feature: Login
         When I visit the home page
         Then I should not see a link to the admin page
 
-    # TODO: This requires using an actual test Google account
-    # Scenario: Users who are logged in through Google should see links to upload templates and send emails.
-    #     Given I am logged in
-    #     And my account is connected to a Google account
-    #     When I visit the home page
-    #     Then I should see a set of links specifically for Google users
-
-    # Scenario: Users who are both logged in through Google and have administrative privileges should have access to both sections.
-    #     Given I am logged in
-    #     And my account is connected to a Google account
-    #     And I have administrative privileges
-    #     When I visit the home page
-    #     Then I should see a set of links specifically for Google users
-    #     And I should see a link to the admin page
+    @fixture.browser
+    Scenario: Users who are logged in through Google should see links to upload templates and send emails.
+        Given I have a Google account
+        When I move to the home page
+        And I log in through Google
+        Then I should see a set of links specifically for Google users

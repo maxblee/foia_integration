@@ -3,6 +3,8 @@ import bs4
 from django.contrib.auth.models import User
 from django.views.generic import TemplateView
 from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
+import sys; sys.path.append("..")
+import browser_handling
 
 @given("I am not logged in")
 def not_logged_in(context):
@@ -12,6 +14,10 @@ def not_logged_in(context):
 def visit_home(context):
     response = context.test_case.client.get("http://127.0.0.1:8000/")
     context.response_html = bs4.BeautifulSoup(response.content, "html.parser")
+
+@when("I move to the home page")
+def visit_home_browser(context):
+    context.browser.get("http://127.0.0.1:8000/")
 
 @then("I should see the login page")
 def screen_says_login(context):
@@ -26,7 +32,8 @@ def logged_in(context):
 
 def log_in(context, admin=False):
     user_create = User.objects.create_superuser if admin else User.objects.create
-    username = context.fake.first_name()
+    # using pystr instead of e.g. first_name because of potential duplicates
+    username = context.fake.pystr()
     # Using faker both to check against different (unpredictable) values
     # and because we don't reset our database in the middle of a test run
     context.user = user_create(
@@ -49,22 +56,17 @@ def page_has_profile_link(context):
     login_section = context.response_html.find("li", {"id": "login-or-profile"})
     assert login_section.get_text().strip() == "Profile"
 
-@given("my account is connected to a Google account")
-def account_connected_to_google(context):
-    uid = context.fake.pystr()
-    google_account = SocialAccount.objects.create(
-        user=context.user,
-        provider="google",
-        uid=uid
-    )
-    google_account.save()
-    app = SocialApp.objects.get(provider="google")
-    token = context.fake.pystr()
+@given("I have a Google account")
+def has_google_account(context):
+    pass
 
+@when("I log in through Google")
+def login_google(context):
+    browser_handling.login_google(context.browser)
 
 @then("I should see a set of links specifically for Google users")
 def google_user_links(context):
-    assert context.response_html.find("div", {"class": "google__info"}) is not None
+    assert context.browser.find_elements_by_class_name("google__info") != []
 
 @given("I am not logged in through Google")
 def login_not_google(context):

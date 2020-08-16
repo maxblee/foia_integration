@@ -1,4 +1,14 @@
 node_modules/
-# from behave-django
-TESTS-features.*.xml
+
+# environment variables for testing
 .env
+
+# selenium webdriver
+*.log
+
+# error logs from behave
+foia_integration/tests/reports/*
+
+__pycache__
+.DS_Store
+*.egg-info

@@ -5,11 +5,23 @@ from behave import fixture
 from django.test.runner import DiscoverRunner
 from django.test.testcases import LiveServerTestCase
 from django.test import Client
+from selenium import webdriver
+from selenium.webdriver.common import action_chains
 from allauth.socialaccount.models import SocialApp
 from faker import Faker
 
 CLIENT_ID = os.environ["GOOGLE_APP_CLIENT"]
 CLIENT_SECRET = os.environ["GOOGLE_APP_SECRET"]
+
+@fixture
+def browser(context, browser_name="Firefox", timeout=30, **kwargs):
+    # adapted from https://behave.readthedocs.io/en/latest/fixtures.html
+    browser = getattr(webdriver, browser_name)()
+    browser.implicitly_wait(2)
+    context.browser = browser
+    context.browser_actions = action_chains.ActionChains(context.browser)
+    context.add_cleanup(browser.close)
+    return browser
 
 @fixture
 def django_test_runner(context):
@@ -24,6 +36,8 @@ def django_test_runner(context):
 @fixture
 def django_test_case(context):
     context.test_case = setup_test_case(LiveServerTestCase)
+    # initially set browser to None and override on fixture.browser tag
+    # context.browser = None
     yield
     context.test_case.tearDownClass()
     del context.test_case
