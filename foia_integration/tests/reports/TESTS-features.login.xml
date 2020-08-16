@@ -1,27 +1,23 @@
-<testsuite errors="0" failures="0" hostname="maxubuntu-Inspiron-5585" name="features.login.Login" skipped="0" tests="2" time="0.226765" timestamp="2020-08-13T02:26:43.723256"><testcase classname="features.login.Login" name="Users who are not logged in should see a log-in screen on the home page." status="passed" time="0.027413"><system-out>
+<testsuite errors="0" failures="0" hostname="maxubuntu-Inspiron-5585" name="features.login.Login" skipped="0" tests="2" time="0.465884" timestamp="2020-08-16T01:20:13.740293"><testcase classname="features.login.Login" name="Users who are not logged in should see a log-in screen on the home page." status="passed" time="0.273096"><system-out>
 <![CDATA[
 @scenario.begin
   Scenario: Users who are not logged in should see a log-in screen on the home page.
     Given I am not logged in ... passed in 0.000s
-    When I visit the home page ... passed in 0.027s
-    Then I should see the login page. ... passed in 0.000s
+    When I visit the home page ... passed in 0.273s
+    Then I should see the login page ... passed in 0.000s
 
 @scenario.end
 --------------------------------------------------------------------------------
 ]]>
-</system-out></testcase><testcase classname="features.login.Login" name="Users who are logged in should see a different page." status="passed" time="0.199352"><system-out>
+</system-out></testcase><testcase classname="features.login.Login" name="Users who are logged in should see a different page." status="passed" time="0.192788"><system-out>
 <![CDATA[
 @scenario.begin
   Scenario: Users who are logged in should see a different page.
-    Given I am logged in ... passed in 0.190s
-    When I visit the home page ... passed in 0.009s
-    Then I should see the home page. ... passed in 0.000s
+    Given I am logged in ... passed in 0.181s
+    When I visit the home page ... passed in 0.012s
+    Then I should see the home page ... passed in 0.000s
 
 @scenario.end
 --------------------------------------------------------------------------------
-
-Captured stdout:
-Home | FOIA Integration
-
 ]]>
 </system-out></testcase></testsuite>

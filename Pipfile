@@ -15,11 +15,12 @@ selenium = "*"
 axe-selenium-python = "*"
 selenium-wire = "*"
 nox = "*"
-behave-django = "*"
 django-debug-toolbar = "*"
 faker = "*"
 mock = "*"
 bs4 = "*"
+python-dotenv = "*"
+behave = "*"
 
 [packages]
 django = "*"

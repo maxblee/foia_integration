@@ -1,3 +1,4 @@
 node_modules/
 # from behave-django
 TESTS-features.*.xml
+.env
