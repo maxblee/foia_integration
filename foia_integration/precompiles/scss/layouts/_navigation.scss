@@ -34,8 +34,8 @@
 
 .navbar__link__bottom {
     position: absolute;
-    right: 1rem;
-    bottom: 0.75rem;
+    right: 0.75rem;
+    bottom: 0;
 }
 
 .banner__main {
@@ -45,19 +45,19 @@
     padding-bottom: 25px;
 }
 
-@include dark-mode {
-    .navbar__item {
-        & a {
-            color: $light;
+// @include dark-mode {
+//     .navbar__item {
+//         & a {
+//             color: $light;
 
-            &:hover, &:focus {
-                background: color.scale($orange, $lightness: -50%);
-            }
-        }
-    }
+//             &:hover, &:focus {
+//                 background: color.scale($orange, $lightness: -50%);
+//             }
+//         }
+//     }
 
-    .banner__main {
-        background-color: color.scale($light-gray, $lightness: -50%);
-    }
-}
+//     .banner__main {
+//         background-color: color.scale($light-gray, $lightness: -50%);
+//     }
+// }
 

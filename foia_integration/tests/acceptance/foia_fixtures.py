@@ -6,12 +6,14 @@ from django.test.runner import DiscoverRunner
 from django.test.testcases import LiveServerTestCase
 from django.test import Client
 from allauth.socialaccount.models import SocialApp
+from faker import Faker
 
 CLIENT_ID = os.environ["GOOGLE_APP_CLIENT"]
 CLIENT_SECRET = os.environ["GOOGLE_APP_SECRET"]
 
 @fixture
 def django_test_runner(context):
+    context.fake = Faker()
     context.test_runner = DiscoverRunner()
     context.test_runner.setup_test_environment()
     context.old_db_config = context.test_runner.setup_databases()
@@ -36,10 +38,9 @@ def setup_test_case(testcase_class: LiveServerTestCase):
     test_case_instance.setUpClass()
     # adapted from original to handle e.g. GET requests
     test_case_instance.client = Client()
-    # HACK: We need to create the Google provider
-    # but we can't have more than one object.
-    # This works, but there's probably a better way to implement it
-    # using e.g. a subclass of testcase
+
+    # If we don't use get_or_create, it would try to create multiple
+    # google APIs and would fail as a result
     google_api, _ = SocialApp.objects.get_or_create(
         provider="google",
         name="Google API",

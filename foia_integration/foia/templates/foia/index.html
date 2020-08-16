@@ -17,7 +17,23 @@
 <div class="lead__container">
     {% if user.is_authenticated %}
     {% if has_google_service %}
-    <p class="lead">You have around {{num_unread}} unread messages in your inbox.</p>
+    <p class="lead">You have {{num_unread}} unread messages in your inbox and {{num_overdue}} overdue requests.</p>
+    <div class="card__flex__container">
+        <div class="card__container">
+            <ul class="card__list">
+                {% if num_unread > 0 %}
+                <li class="card__item">
+                    <a href="#">Read your unread messages.</a>
+                </li>
+                {% endif %}
+                {% if num_overdue > 0 %}
+                <li class="card__item">
+                    <a href="#">Follow up on your overdue requests.</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
     {% else %}
     {% endif %}
     {% else %}
@@ -26,17 +42,112 @@
     {% endif %}
 </div>
 {% if not user.is_authenticated %}
-<div class="login__flex__container">
-    <div class="login__container">
-        <h2>Sign In</h2>
-        <p>
+<div class="card__flex__container login__info">
+    <div class="card__container">
+        <div class="card__panel">
+            <h2>Sign In</h2>
+            <p>
             This application reads through messages in your GMail account, reads your contact list, and sends you messages
         on your behalf. Because of this, it is highly recommended that you only use this GMail account for filing public records requests,
         due to privacy concerns and because using this account for other things might make the application less useful.
-        </p>
-        <a href="{% provider_login_url 'google' %}" class="login__google" aria-label="Log into Google.">
-        </a>
+            </p>
+            <a href="{% provider_login_url 'google' %}" class="login__google" aria-label="Log into Google.">
+            </a>
+        </div>
     </div>
 </div>
+{% else %}
+<div class="container__lead">
+    <h2>Your Public Records Requests</h2>
+</div>
+        <div class="card__flex__container">
+            {% if has_google_service %}
+            <div class="card__panel google__info">
+                <h3>File Requests</h2>
+                <div class="card__container">
+                    <ul class="card__list">
+                        <li class="card__item">
+                            <a href="#">Create Public Records Templates</a>
+                        </li>
+                        <li class="card__item">
+                            <a href="#">Send Public Records Requests</a>
+                        </li>
+                        <li class="card__item">
+                            <a href="#">Schedule Records Requests</a>
+                        </li>
+                        <li class="card__item">
+                            <a href="#">End Scheduled Requests</a>
+                        </li>
+                        <li class="card__item">
+                            <a href="#">Create Agency Groupings</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+            <div class="card__panel">
+                <h3>Manage Requests</h2>
+                <div class="card__container">
+                        <ul class="card__list">
+                            {% if has_google_service %}
+                            <li class="card__item">
+                                <a href="#">Respond or Follow Up on Request</a>
+                            </li>
+                            {% endif %}
+                            <li class="card__item">
+                                <div class="card__item__subheading">
+                                    <a href="#">Update Request</a>
+                                    <ul class="card__list">
+                                        <li class="card__item">
+                                            <a href="#">Add Contact Attempt</a>
+                                        </li>
+                                        <li class="card__item">
+                                            <a href="#">Add Record(s)</a>
+                                        </li>
+                                        <li class="card__item">
+                                            <a href="#">Update Request Status or Scope</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="card__item">
+                                <a href="#">Add or Update Agency</a>
+                            </li>
+                            <li class="card__item">
+                                <a href="#">Add or Update Source</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card__panel">
+                    <h3>Find Requests</h3>
+                    <div class="card__container">
+                        <ul class="card__list">
+                            <li class="card__item">
+                                <a href="#">Search for Requests</a>
+                            </li>
+                            <li class="card__item">
+                                <a href="#">Search for Documents</a>
+                            </li>
+                            <li class="card__item">
+                                <a href="#">Search for People</a>
+                            </li>
+                            <li class="card__item">
+                                <a href="#">Search for Agencies</a>
+                            </li>
+                            <li class="card__item">
+                                <a href="#">View Agency Groupings</a>
+                            </li>
+                            <li class="card__item">
+                                <a href="#">View Scheduled Requests</a>
+                            </li>
+                            <li class="card__item">
+                                <a href="#">View Projects</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        <div class="card__flex__container user__info"></div>
 {% endif %}
 {% endblock %}

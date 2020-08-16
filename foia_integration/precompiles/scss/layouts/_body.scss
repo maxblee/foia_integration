@@ -10,9 +10,9 @@ body {
     font-size: $font-small;
 }
 
-@include dark-mode {
-    body {
-        background: $dark;
-        color: $light;
-    }
-}
+// @include dark-mode {
+//     body {
+//         background: $dark;
+//         color: $light;
+//     }
+// }

@@ -5,6 +5,8 @@ from foia.utils import auth
 def app_index(request):
     extra_context = {}
     gmail_service = auth.get_user_service(request)
+    if request.user.is_authenticated:
+        extra_context["num_overdue"] = "TODO"
     extra_context["has_google_service"] = gmail_service is not None
     if gmail_service is not None:
         service, uid = gmail_service

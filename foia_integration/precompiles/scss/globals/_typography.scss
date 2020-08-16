@@ -3,8 +3,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-    font-size: $font-large;
+    font-size: $heading-large;
     text-align: center;
+}
+
+h2 {
+    font-size: $heading-med;
+}
+
+h3 {
+    font-size: $heading-small;
 }
 
 nav {
@@ -13,4 +21,8 @@ nav {
 
 p {
     margin-left: 2rem;
+}
+
+a {
+    color: black;
 }

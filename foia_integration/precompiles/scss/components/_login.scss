@@ -1,15 +1,17 @@
-.login__flex__container {
+.card__flex__container {
     display: flex;
-    justify-content: center;
+    justify-content: space-evenly;
+    flex-direction: column;
+
+    @include desktop-only {
+        flex-direction: row;
+    }
 }
 
-.login__container {
+.card__container {
     background: $light;
     border: 1px dashed rgb(187, 187, 187);
     border-radius: 30px;
-    min-width: 400px;
-    min-height: 200px;
-    text-align: center;
     max-width: 600px;
     padding: 2rem;
     margin: 1rem;
@@ -19,10 +21,45 @@
     }
 }
 
-@include dark-mode {
-    .login__container {
-        background: $dark;
+.card__panel {
+    text-align: center;
+    margin-top: 5px;
+}
+
+.card__list {
+    list-style-type: none;
+}
+
+.card__item {
+
+    text-align: left;
+
+    & a {
+        font-size: $font-med;
+        font-family: $font-heading;
     }
+}
+
+.card__item__subheading {
+    font-size: $font-med;
+    font-family: $font-heading;
+
+    ul li {
+        transform: translateX(2rem);
+            a {
+        font-size: $font-small;
+            }
+        }
+}
+
+// @include dark-mode {
+//     .login__container {
+//         background: $dark;
+//     }
+// }
+.google__info {
+    min-width: 400px;
+    min-height: 200px;
 }
 
 .login__google {

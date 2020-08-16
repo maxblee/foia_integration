@@ -5,9 +5,18 @@
 
 @include desktop-only {
 
-    .lead__container {
+    .lead__container, .container__lead {
         width: 80%;
         margin: auto;
         text-align: center;
+    }
+}
+
+.lead__container, .container__lead {
+    text-align: center;
+    margin: auto;
+
+    @include desktop-only {
+        width: 80%;
     }
 }
