@@ -2,7 +2,40 @@
 
 ### Step One: Setting up PostgreSQL
 
-First, you need to set up a PostgreSQL database in order to use this Django app.
+First, you need to set up a PostgreSQL database in order to use this Django app. The first step for this is installing PostgreSQL.
+I'm using PostgreSQL 12.2. 
+
+After you've installed PostgreSQL, you should set up a user for this tool. You can do this by typing:
+
+```sh
+$ sudo -u postgres createuser --interactive
+```
+
+Note that if you want to develop on this system and run tests, you should allow your user to create databases. 
+
+And once you've created a user, you should create a new database:
+
+```sh
+$ createdb <YOUR_DATABASE_NAME>
+```
+
+From here you can run
+
+```sh
+$ sudo adduser <YOUR_DATABASE AND ROLE NAME>
+$ sudo -u <YOUR_DATABASE_AND_ROLE_NAME> psql
+```
+
+To log yourself into psql, and then you can run
+
+```sh
+=> ALTER USER <YOUR_ROLE_NAME> WITH PASSWORD <YOUR_PASSWORD>;
+```
+
+You can read a full description of this setup [in DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-18-04).
+
+Once you've set up PostgreSQL, you should save your database configuration in environment variables.
+
 These are the default settings in the `settings.py` for the project:
 
 ```python
@@ -33,19 +66,56 @@ export POSTGRES_PWD=<YOUR PASSWORD>
 $ source ~/.bashrc
 ```
 
-By default, the database this uses is named `foia_integration`; you must also set that up.
+### Step Two: Setting up Google
+In order to run this app, you need to configure an app in Google's developer console.
 
-### Step Two: Setting up Django
+TODO
 
-- environment loading
-- precompilation
-- database migrate + superuser creation
+### Step Three: Setting up Django
+
+Finally, you need to set up Django. The first requirement for doing this is simply
+installing all of the packages. Using `pipenv`, you can run
 
 ```sh
-pipenv install
-cd foia_integration
-npm install
-util_scripts
+$ pipenv install
 ```
 
-### Step Three: Setting Up Google Account
+to load all the dependencies.
+
+Next, you need to create a superuser and set up your database with some initial
+data.
+
+```sh
+$ cd foia_integration
+$ python manage.py migrate
+$ python manage.py loaddata
+$ python manage.py createsuperuser
+```
+
+After following all of the prompts, you just have one more thing to do. First, you should start Django's server and go to the Admin page (http://127.0.0.1:8000/admin):
+
+```
+$ python manage.py runserver
+```
+
+From here, you need to log in using the superuser credentials you just created.
+
+Then, you need to go to the Site panel on the admin page and click on the green plus sign to add a new site. Now, configure the domain and the name with one of the URIs you authorized in the developer console. If you authorized Google to use multiple sites, you can use multiple sites.
+
+Then, you should go back to the admin page and add a "Social application." Click the choice for Google, add a name for it, and add your client ID and your secret key (which can be found in the developer console). Move over the site(s) you want to use to have them connected with your account.
+
+Now, if you log out of your admin account, visit http://127.0.0.1 and log in through Google, you should be able to fully use the site.
+
+### Step Four (Optional): Testing Setup
+
+If you want to get set up to run tests, there are a few additional small things you need to get set up. First, you should download the development dependencies:
+
+```sh
+$ pipenv install --dev
+```
+
+Next, you will need to download a copy of Geckodriver (the selenium Firefox browser) and install it in its default location.
+
+You should also set up a GMail account to run tests on. 
+
+Finally, you will need to configure a number of environment variables (primarily so we can test to make sure that the functions work against a real live testing GMail account.) I've used a dotenv file for saving these files that looks something like this:
