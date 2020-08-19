@@ -18,7 +18,7 @@ import { each, onMount, text } from "svelte/internal";
 	}
 
 	function updateInput() {
-		const regex = /\{\{(.*)\}\}/g;
+		const regex = /\{\{([\w\s]+)\}\}/g;
 		const elemText = document.getElementById("target").value;
 		let newNodes = [];
 		let lastIdx = 0;
