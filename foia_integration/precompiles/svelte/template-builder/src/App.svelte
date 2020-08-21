@@ -19,7 +19,7 @@ import { each, onMount, text } from "svelte/internal";
 
 	function updateInput() {
 		const regex = /\{\{([\w\s]+)\}\}/g;
-		const elemText = document.getElementById("target").value;
+		const elemText = document.getElementById("template-input").value;
 		let newNodes = [];
 		let lastIdx = 0;
 		let field;
@@ -35,7 +35,7 @@ import { each, onMount, text } from "svelte/internal";
 
 	function addItem(event) {
 		const elemText = event.target.innerText;
-		document.getElementById("target").value += `{{${elemText}}}`;
+		document.getElementById("template-input").value += `{{${elemText}}}`;
 		updateInput();
 	}
 </script>
@@ -51,20 +51,22 @@ import { each, onMount, text } from "svelte/internal";
 </div>
 <div class="button__container">
 {#each Object.keys(buttonItems) as button}
-<button data-field={button} class="button__item" on:click={addItem}>{buttonItems[button]}</button>
+<button type="button" data-field={button} class="button__item" on:click={addItem}>{buttonItems[button]}</button>
 {/each}
 </div>
 <div class="form__area">
-	<textarea id="target" on:input={handleTextInputChange}></textarea>
+	<textarea name="template-text" aria-label="Write your template here" id="template-input" on:input={handleTextInputChange}></textarea>
 </div>
-<div class="submit__container"></div>
+<div class="submit__container">
+	<input type="submit" value="Submit Template">
+</div>
 
 <style>
 	* {
 		margin: auto;
 	}
 
-	#target {
+	#template-input {
 		box-sizing: border-box;
 		-webkit-box-sizing: border-box;
 		-moz-box-sizing: border-box;
@@ -77,6 +79,7 @@ import { each, onMount, text } from "svelte/internal";
 		overflow: hidden;
 		display: block;
 		margin-left: auto;
+		margin-bottom: 1rem;
 	}
 
 	.template__highlight {
@@ -115,5 +118,14 @@ import { each, onMount, text } from "svelte/internal";
 		background-color: #C27400;
 		cursor: pointer;
 		color: #FAFAFA;
+	}
+
+	.submit__container {
+		/* display: flex; */
+		text-align: center;
+		margin-bottom: 15px;
+	}
+	input {
+		font-size: 1.2rem;
 	}
 </style>

@@ -22,5 +22,6 @@ from foia import views as app_views
 urlpatterns = [
     path("", app_views.app_index, name="index"),
     path('admin/', admin.site.urls),
-    path("accounts", include("allauth.urls"))
+    path("accounts", include("allauth.urls")),
+    path("template-builder", app_views.template_render, name="template")
 ]

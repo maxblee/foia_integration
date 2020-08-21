@@ -99,12 +99,12 @@ a {
   text-align: left;
 }
 .card__item a {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-family: "Montserrat-SemiBold", "Arial Narrow Bold", Arial, Helvetica, sans-serif;
 }
 
 .card__item__subheading {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-family: "Montserrat-SemiBold", "Arial Narrow Bold", Arial, Helvetica, sans-serif;
 }
 .card__item__subheading ul li {
@@ -159,7 +159,7 @@ a {
 .navbar__menu {
   display: flex;
   justify-content: space-between;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   top: 0;
 }
 
@@ -210,8 +210,21 @@ body {
   font-size: 1rem;
 }
 
+.select__container {
+  display: block;
+  text-align: center;
+  font-size: 1.3rem;
+}
+.select__container label {
+  display: block;
+}
+.select__container select {
+  display: block;
+  margin: auto;
+}
+
 .lead {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   padding: 1rem;
 }
 
@@ -219,17 +232,19 @@ body {
   .lead__container, .container__lead {
     width: 80%;
     margin: auto;
-    text-align: center;
   }
 }
 .lead__container, .container__lead {
-  text-align: center;
   margin: auto;
 }
 @media (min-width: 900px) {
   .lead__container, .container__lead {
     width: 80%;
   }
+}
+
+code {
+  background-color: gainsboro;
 }
 
 /*# sourceMappingURL=styles-main.css.map */

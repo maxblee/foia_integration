@@ -28,4 +28,4 @@ psycopg2 = "*"
 django-allauth = "*"
 google-auth = "*"
 google-api-python-client = "*"
-
+us = "*"

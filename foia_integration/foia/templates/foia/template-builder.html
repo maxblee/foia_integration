@@ -1,0 +1,50 @@
+{% extends "base_generic.html" %}
+{% load static %}
+
+{% block extra_heads %}
+<link rel="stylesheet" href="{% static 'css/template-builder.css' %}" />
+<script defer src="{% static 'js/template-builder.js' %}"></script>
+{% endblock %}
+
+{% block banner %}
+<h1>Build a Public Records Template</h1>
+{% endblock %}
+
+{% block content %}
+<div class="lead__container">
+    <p class="lead">In order to send public records act requests
+        through this application, you'll want to build a template. That way,
+        you can have some legal boilerplate text in every message so you won't have
+        to repeat yourself every time you send a request.
+    </p>
+    <p class="lead">Select a state to have your requests tailored for that state's laws, or
+        choose a generic template that is consistent over all your requests.
+    </p>
+    <p class="lead">Click a button to include that information in your requests or enclose the text of a button
+        in two brackets like this: <code>{% verbatim %}{{ Requested Records }}{% endverbatim %}</code>.
+        The only requirement is that you add the field for requesting records.
+    </p>
+</div>
+<div class="main__container">
+    <form method="POST">
+        {% csrf_token %}
+        {% if form_error %}
+        <div class="form__errors">
+            <div class="form__error__item">
+                {{form_error}}
+            </div>
+        </div>
+        {% endif %}
+        <div class="select__container">
+            <label for="state-selection">Select a State</label>
+            <select name="state" id="state-selection">
+                <option value="generic">Generic</option>
+                {% for state in states %}
+                <option value="{{state.abbr}}">{{state.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div id="foia-template"></div>
+    </form>
+</div>
+{% endblock %}

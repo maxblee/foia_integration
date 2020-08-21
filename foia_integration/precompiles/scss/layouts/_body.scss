@@ -10,6 +10,21 @@ body {
     font-size: $font-small;
 }
 
+.select__container {
+    display: block;
+    text-align: center;
+    font-size: $font-med;
+
+    & label {
+        display: block;
+    }
+
+    & select {
+        display: block;
+        margin: auto;
+    }
+}
+
 // @include dark-mode {
 //     body {
 //         background: $dark;
