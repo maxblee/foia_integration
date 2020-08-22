@@ -1,6 +1,6 @@
 import functools
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render
 
 from foia.utils import auth, templating
@@ -20,7 +20,7 @@ def app_index(request):
         extra_context["num_unread"] = new_messages["resultSizeEstimate"]
     return render(request, "foia/index.html", extra_context)
 
-@login_required
+@user_passes_test(auth.user_has_gmail, login_url="/")
 def template_render(request):
     """Renders the template builder"""
     context = {}

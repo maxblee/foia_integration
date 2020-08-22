@@ -13,6 +13,7 @@
 
 .lead__container, .container__lead {
     margin: auto;
+    text-align: center;
 
     @include desktop-only {
         width: 80%;

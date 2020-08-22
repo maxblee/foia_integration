@@ -4,6 +4,13 @@ import googleapiclient.discovery
 from django.http import HttpRequest
 from typing import Any, Dict, Optional
 
+def user_has_gmail(user):
+    """Tests whether a user has an attached GMail account."""
+    if not user.is_authenticated:
+        return False
+    google_user = SocialAccount.objects.filter(provider="google", user=user)
+    return google_user.exists()
+
 def get_user_service(request: HttpRequest) -> Optional[googleapiclient.discovery.Resource]:
     """Gets a GMAIL Service object given.
 

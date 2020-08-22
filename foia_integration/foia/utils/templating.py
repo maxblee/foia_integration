@@ -28,14 +28,15 @@ def encode_template(template_str: str):
             raise KeyError(
                 f"You must enter a valid template value. Valid options are: {valid_vals}"
             )
+        json_format["boilerplate"] += template_str[last_idx:template_item.start()]
         template_data = {
             "text": cleaned_text,
             "field": DESC_TO_TEMPLATE[cleaned_text],
-            "position": template_item.start()
+            "position": len(json_format["boilerplate"])
         }
-        json_format["boilerplate"] += template_str[last_idx:template_item.start()]
         json_format["template"].append(template_data)
         last_idx = template_item.end()
+    json_format["boilerplate"] += template_str[last_idx:]
     if not any([item["field"] == "requestedRecords" for item in json_format["template"]]):
         raise KeyError("You must put the requested records somewhere in your template.")
     return json_format

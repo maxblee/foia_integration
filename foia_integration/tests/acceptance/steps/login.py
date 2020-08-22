@@ -1,7 +1,6 @@
 from behave import given, when, then
 import bs4
 from django.contrib.auth.models import User
-from django.views.generic import TemplateView
 from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
 import sys; sys.path.append("..")
 import browser_handling
@@ -24,7 +23,6 @@ def screen_says_login(context):
     assert context.response_html.title.string == "Log In | FOIA Integration"
     assert context.response_html.find("div", {"class": "login__info"}) is not None
     assert len(context.response_html.select("[href='/admin/']")) == 0
-    assert context.response_html.find("div", {"class": "user__info"}) is None
 
 @given("I am logged in")
 def logged_in(context):
