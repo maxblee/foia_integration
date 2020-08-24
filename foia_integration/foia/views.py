@@ -3,7 +3,7 @@ import functools
 from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render
 
-from foia.utils import auth, templating
+from foia.utils import auth, templating, common_queries
 from foia.models import State, PRATemplate
 # Create your views here.
 
@@ -38,10 +38,7 @@ def template_render(request):
         # pass template error to user
         except KeyError as e:
             context["form_error"] = str(e)
-    states = sorted([
-        {"abbr": state.abbr, "name": state.info.name} 
-        for state in State.objects.all()
-    ], key=functools.cmp_to_key(state_ordering))
+    states = common_queries.order_states()
     context["states"] = states
     return render(request, "foia/template-builder.html", context)
 
@@ -49,15 +46,3 @@ def template_render(request):
 def file_requests(request):
     context = {}
     return render(request, "foia/foia-request.html", context)
-
-def state_ordering(a, b):
-    """Order states by abbreviation, but with United States at top"""
-    if a["abbr"] == "US":
-        return -1
-    elif b["abbr"] == "US":
-        return 1
-    elif a["abbr"] > b["abbr"]:
-        return 1
-    elif a["abbr"] < b["abbr"]:
-        return -1
-    return 0

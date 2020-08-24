@@ -7,7 +7,14 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 
 from foia.models import PRATemplate, State
-from foia.utils import auth
+from foia.utils import auth, common_queries
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def get_states(request):
+    """Returns a list of states ordered mostly by abbreviation."""
+    return JsonResponse({"states":common_queries.order_states()})
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])

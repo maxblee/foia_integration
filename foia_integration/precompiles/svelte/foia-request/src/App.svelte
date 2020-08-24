@@ -2,7 +2,7 @@
 	import {recipients, count, start} from "./store.js";
 	import Recipient from "./Recipient.svelte";
 	import Request from "./Request.svelte";
-	export let states = [];
+	let states = fetch("/api/current-user/states");
 
 </script>
 <div class="form__container">

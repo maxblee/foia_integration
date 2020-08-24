@@ -2,12 +2,15 @@
     import { recipients, count } from "./store.js";
     import RecipientField from "./RecipientField.svelte";
     
-    export let states = [];
     export let idx = 0;
 
     let currentTemplate = "";
 
     let startUrl = "/api/current-user/";
+    let states = fetch(startUrl + "states")
+        .then(response => response.json())
+        .then(data => data.states)
+        .catch(e => {console.error(e);});
 
     function getTemplateInfo() {
         let templateData = {};
@@ -60,7 +63,9 @@
     <div class="agency__general">
         <RecipientField idx="{idx}" fieldKey="agencyName" />
         <RecipientField idx="{idx}" fieldKey="foiaEmail" fieldType="email" required={true}/>
-        <RecipientField idx="{idx}" fieldKey="agencyState" fieldType="select" required={true} options={states} />
+        {#await states then options}
+        <RecipientField idx="{idx}" fieldKey="agencyState" fieldType="select" required={true} options={options} />
+        {/await}
     </div>
     <div class="agency__street">
         <RecipientField idx="{idx}" fieldKey="agencyStreetAddress" />
