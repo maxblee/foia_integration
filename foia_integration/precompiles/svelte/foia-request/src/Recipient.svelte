@@ -7,10 +7,8 @@
     let currentTemplate = "";
 
     let startUrl = "/api/current-user/";
-    let states = fetch(startUrl + "states")
-        .then(response => response.json())
-        .then(data => data.states)
-        .catch(e => {console.error(e);});
+    export let states;
+    
 
     function getTemplateInfo() {
         let templateData = {};

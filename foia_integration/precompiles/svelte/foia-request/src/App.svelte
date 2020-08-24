@@ -2,8 +2,10 @@
 	import {recipients, count, start} from "./store.js";
 	import Recipient from "./Recipient.svelte";
 	import Request from "./Request.svelte";
-	let states = fetch("/api/current-user/states");
-
+	let states = fetch("/api/current-user/states")
+        .then(response => response.json())
+        .then(data => data.states)
+        .catch(e => {console.error(e);});
 </script>
 <div class="form__container">
 	<div class="section__container">
