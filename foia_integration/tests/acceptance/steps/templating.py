@@ -11,12 +11,6 @@ from selenium.webdriver.common.by import By
 import sys; sys.path.append("..")
 import browser_handling
 
-# hacky, quick way to load actual data for templating rather than running load_data
-STATE_DATA = {
-    "US": {"public_records_act_name": "Freedom of Information Act", "maximum_response_time": 20, "business_days": True, "abbr": "US"},
-    "AZ": {"public_records_act_name": "Arizona Public Records Law", "maximum_response_time": None, "business_days": None, "abbr": "AZ"}
-}
-
 @given("Jason is logged in")
 def logs_in(context):
     username = "jason"
@@ -39,8 +33,9 @@ def logs_in(context):
 
 @given("the {state} data is loaded")
 def load_state_data(context, state):
-    if state != "generic":
-        State.objects.create(**STATE_DATA[state])
+    pass
+    # if state != "generic":
+    #     State.objects.create(**STATE_DATA[state])
 
 @when("Jason submits the form with his {state} and {language}")
 def submits_template(context, state, language):

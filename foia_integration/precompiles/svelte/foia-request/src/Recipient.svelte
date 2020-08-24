@@ -4,9 +4,56 @@
     
     export let states = [];
     export let idx = 0;
+
+    let currentTemplate = "";
+
+    let startUrl = "/api/current-user/";
+
+    function getTemplateInfo() {
+        let templateData = {};
+        const selected = document.getElementById(`recipient-${idx}`);
+        const generalText = document.getElementById("request")
+            .getElementsByTagName("textarea");
+        const generalSubject = document.getElementById("request")
+            .getElementsByTagName("input");
+        const recipText = selected.getElementsByTagName("input");
+        const recipSelect = selected.getElementsByTagName("select");
+        const allTags = [...generalText, ...generalSubject, ...recipText, ...recipSelect];
+        for (let elem of allTags) {
+            const elemKey = elem.id.replace("id_", "").replace(`-${idx}`, "");
+            templateData[elemKey] = elem.value;
+        }
+        return templateData;
+    }
+
+    function fillTemplate(jsonData, templateData) {
+        let lastIdx = 0;
+        let templateText = "";
+        for (let tag of templateData.template) {
+            templateText += templateData.boilerplate.slice(lastIdx, tag.position);
+            const jsonItem = jsonData[tag.field];
+            templateText += jsonItem === undefined ? templateData[tag.field] : jsonItem;
+            lastIdx = tag.position; 
+        }
+        templateText += templateData.boilerplate.slice(lastIdx, templateData.boilerplate.length);
+        return templateText;
+    }
+
+    async function previewSubmission(event) {
+        const currentState = document.getElementById(`id_agencyState-${idx}`).value;
+        const templateURL = startUrl + "template/" + currentState;
+        const recipientData = getTemplateInfo();
+        let response = await fetch(templateURL)
+            .then(response => response.json())
+            .then(templateData => {
+                return fillTemplate(recipientData, templateData);
+            })
+            .catch((err) => {console.error(err);});
+        currentTemplate = response;
+    }
 </script>
 
-<div class="recipient__item">
+<div class="recipient__item" id="recipient-{idx}">
     <div class="recipient__person">
         <RecipientField idx="{idx}" fieldKey="recipientName" />
     </div>
@@ -16,7 +63,7 @@
         <RecipientField idx="{idx}" fieldKey="agencyState" fieldType="select" required={true} options={states} />
     </div>
     <div class="agency__street">
-        <RecipientField idx="{idx}" fieldKey="agencySteetAddress" />
+        <RecipientField idx="{idx}" fieldKey="agencyStreetAddress" />
         <RecipientField idx="{idx}" fieldKey="agencyZip" />
         <RecipientField idx="{idx}" fieldKey="agencyMunicipality" />
     </div>
@@ -34,6 +81,12 @@
                 <svg role="img" width="25px" viewBox="0 0 20 20" fill="currentColor" class="x w-6 h-6"><title>Delete This Item</title><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
             </button>
             {/if}
+        </div>
+    </div>
+    <div class="expand__preview">
+        <button id="expand-{idx}" on:click="{previewSubmission}">Preview Request</button>
+        <div id="template-{idx}" class="template__results">
+            {currentTemplate}
         </div>
     </div>
 </div>
@@ -70,5 +123,9 @@
         background-color: #C27400;
         color: white;
         border-color: transparent   ;
+    }
+
+    .template__results {
+        white-space: pre-wrap;
     }
 </style>

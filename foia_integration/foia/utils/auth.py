@@ -1,8 +1,10 @@
+import functools
+from typing import Any, Dict, Optional
+
 from allauth.socialaccount.models import SocialAccount, SocialToken, SocialApp
 from google.oauth2.credentials import Credentials
 import googleapiclient.discovery
-from django.http import HttpRequest
-from typing import Any, Dict, Optional
+from django.http import HttpRequest, HttpResponseForbidden
 
 def user_has_gmail(user):
     """Tests whether a user has an attached GMail account."""
@@ -50,3 +52,25 @@ def get_user_service(request: HttpRequest) -> Optional[googleapiclient.discovery
     # TODO: Have better/more clear error handling for this, at least at view level
     service = googleapiclient.discovery.build("gmail", "v1", credentials=creds)
     return service, google_user.uid
+
+def show_view_or_403(test_func, msg_403="Permission Denied."):
+    """Modification of django's user_passes_test that doesn't redirect.
+    
+    This is designed for dealing with permission denials
+    on e.g. APIs that should just return 403 responses.
+    Based on user_passes_test 
+    https://github.com/django/django/blob/master/django/contrib/auth/decorators.py
+
+    Args:
+        test_func: The function testing e.g. user permissions.
+        msg_403: The message you want to display to users on a 403
+            error.
+    """
+    def decorator(view_func):
+        @functools.wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if test_func(request.user):
+                return view_func(request, *args, **kwargs)
+            return HttpResponseForbidden("Permission Denied.")
+        return _wrapped_view
+    return decorator

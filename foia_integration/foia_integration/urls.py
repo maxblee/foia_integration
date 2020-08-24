@@ -20,8 +20,7 @@ from django.views.generic import TemplateView
 from foia import views as app_views
 
 urlpatterns = [
-    path("", app_views.app_index, name="index"),
+    path("", include("foia.urls")),
     path('admin/', admin.site.urls),
     path("accounts", include("allauth.urls")),
-    path("template-builder", app_views.template_render, name="template")
 ]

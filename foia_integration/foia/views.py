@@ -45,6 +45,11 @@ def template_render(request):
     context["states"] = states
     return render(request, "foia/template-builder.html", context)
 
+@user_passes_test(auth.user_has_gmail, login_url="/")
+def file_requests(request):
+    context = {}
+    return render(request, "foia/foia-request.html", context)
+
 def state_ordering(a, b):
     """Order states by abbreviation, but with United States at top"""
     if a["abbr"] == "US":

@@ -43,7 +43,7 @@
     }
 
     select {
-        background-image: url("./down-arrow.svg");
+        background-image: url("../images/down-arrow.svg");
         background-repeat: no-repeat;
         background-position: 100% 50%;
         appearance: none;

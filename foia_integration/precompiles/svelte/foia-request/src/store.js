@@ -5,7 +5,7 @@ const init = {
     "agencyName": {text: "Agency Name", value: ""},
     "foiaEmail": {text: "Public Records Email", value: ""},
     "agencyState": {text: "Agency State", value: ""},
-    "agencySteetAddress": {text: "Agency Street Address", value: ""},
+    "agencyStreetAddress": {text: "Agency Street Address", value: ""},
     "agencyMunicipality": {text: "Agency Municipality", value: ""},
     "agencyZip": {text: "Agency ZIP Code", value: ""}
 };

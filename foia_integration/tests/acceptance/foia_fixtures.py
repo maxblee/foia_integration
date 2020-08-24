@@ -2,6 +2,7 @@ import os
 
 # adapted from https://behave.readthedocs.io/en/latest/usecase_django.html
 from behave import fixture
+from django.core.management import call_command
 from django.test.runner import DiscoverRunner
 from django.test.testcases import LiveServerTestCase
 from django.test import Client
@@ -52,7 +53,9 @@ def setup_test_case(testcase_class: LiveServerTestCase):
     test_case_instance.setUpClass()
     # adapted from original to handle e.g. GET requests
     test_case_instance.client = Client()
-
+    # simply adding a testcase with this in fixtures = [...]
+    # doesn't load them to the database without additional configuration
+    call_command("loaddata", "foia/initial_data/pra_models.json")
     # If we don't use get_or_create, it would try to create multiple
     # google APIs and would fail as a result
     google_api, _ = SocialApp.objects.get_or_create(
@@ -63,3 +66,9 @@ def setup_test_case(testcase_class: LiveServerTestCase):
     )
     google_api.save()
     return test_case_instance
+
+class DataTestCase(LiveServerTestCase):
+    """A light wrapper over LiveServerTestCase
+    to add initial data
+    """
+    fixtures = ["foia/initial_data/pra_models.json"]

@@ -26,7 +26,7 @@ SECRET_KEY = 'ljv$d_=6f&q%m=p2c!%hk(q4oa*)15ea-it0)eef&+2f8)(spv'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1"]
 
 
 # Application definition
@@ -47,10 +47,12 @@ INSTALLED_APPS += [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+    "rest_framework"
 ]
 
 # Testing Infrastructure
 INSTALLED_APPS += [
+    'corsheaders'
 ]
 
 # apps
@@ -61,6 +63,7 @@ INSTALLED_APPS += [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -167,4 +170,14 @@ SOCIALACCOUNT_PROVIDERS = {
             "access_type": "offline"
         }
     }
+}
+
+CORS_ORIGIN_WHITELIST = ["http://localhost:5000"]
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
 }
