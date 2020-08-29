@@ -6,8 +6,9 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 
-from foia.models import PRATemplate, State
+from foia.models import PRATemplate, State, Entity
 from foia.utils import auth, common_queries
+from foia.utils.templating import TEMPLATE_TO_DESC
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
@@ -60,3 +61,69 @@ def get_template(request, state_abbr):
     json_template["maxRespTime"] = response_time
     response = JsonResponse(json_template)
     return response
+
+# Entity autocomplete API
+def find_valid_entities(request):
+    # prefetch state objects for performance later
+    return Entity.objects.select_related("state").filter(
+        user=request.user,
+        is_agency=True
+    ).exclude(pra_email__isnull=True).exclude(
+        pra_email__exact=""
+    )
+
+def agencies_from_results(filtered_agencies, **kwargs):
+    """Returns a list of matching agencies, plus additional values."""
+    value_results = filtered_agencies.values(
+        "name", 
+        "street_address",
+        "municipality",
+        "state__abbr",
+        "zip_code",
+        "pra_email"
+    )
+    agencies = [
+        {
+            "agencyName": k["name"],
+            "agencyStreetAddress": k["street_address"],
+            "agencyMunicipality": k["municipality"],
+            "agencyState": k["state__abbr"],
+            "agencyZip": k["zip_code"],
+            "foiaEmail": k["pra_email"]
+        }
+        for k in value_results
+    ]
+    json_res = {"results": agencies}
+    json_res.update(kwargs)
+    return json_res
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def agency_by_name(request):
+    """Finds a list of agencies by the starting characters of
+    a name."""
+    params = request.query_params
+    field_mapping = {
+        "agencyName": "name",
+        "foiaEmail": "pra_email",
+        "agencyStreetAddress": "street_address",
+        "agencyZip": "zip_code",
+        "agencyMunicipality": "municipality"
+    }
+    if 'q' in params and 'field' in params and params["field"] in field_mapping:
+        lookup = f"{field_mapping[params['field']]}__istartswith"
+        query = {lookup: params["q"]}
+        valid_agencies = find_valid_entities(request).filter(**query)
+        results = agencies_from_results(
+            valid_agencies,
+            queryField=TEMPLATE_TO_DESC[params["field"]],
+            query=params["q"],
+            numResults=valid_agencies.count()
+        )
+        return Response(results)
+    return Response({
+        "status": 400,
+        "message": f"Invalid query. Must pass 'q' and 'field' parameters with valid values."
+    }, status=status.HTTP_404_NOT_FOUND)
+    

@@ -8,9 +8,8 @@ from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
 
 from foia.models import PRATemplate, State
 
-class FileRequestTest(APITestCase):
-    """Tests the API calls related to filing a FOIA request."""
-
+class FoiaAPITestCase(APITestCase):
+    """A base class used by all of the API tests."""
     fixtures = ["foia/initial_data/pra_models.json"]
 
     def setupUser(self):
@@ -23,6 +22,9 @@ class FileRequestTest(APITestCase):
         self.user.set_password(pwd)
         self.user.save()
         self.client.login(username=username,password=pwd)
+
+class FileRequestTest(FoiaAPITestCase):
+    """Tests the API calls related to filing a FOIA request."""
 
     def create_template(self, state=None):
         template = {

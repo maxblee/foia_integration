@@ -88,7 +88,7 @@
     </div>
     <div class="expand__preview">
         <button id="expand-{idx}" on:click="{previewSubmission}">Preview Request</button>
-        <div id="template-{idx}" class="template__results">
+        <div id="template-{idx}" class="template__preview">
             {currentTemplate}
         </div>
     </div>
@@ -128,7 +128,7 @@
         border-color: transparent   ;
     }
 
-    .template__results {
+    .template__preview {
         white-space: pre-wrap;
     }
 </style>

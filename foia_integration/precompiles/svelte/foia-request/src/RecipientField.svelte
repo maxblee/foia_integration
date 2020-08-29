@@ -6,11 +6,30 @@
     export let fieldType = "text";
     export let options = [];
     export let required = false;
+    let agencies = [];
+    // just show top 5 agencies
+    $: firstAgencies = agencies.slice(0, 5);
 
     $: idField = `id_${fieldKey}-${idx}`;
+    $: autocompleteField = `autocomplete_${fieldKey}-${idx}`;
     $: nameField = `${fieldKey}-${idx}`;
     $: fieldVal = $recipients[idx][fieldKey].value;
     $: selectVal = (fieldType === "select" && options.length > 0 && fieldVal === "") ? options[0].abbr : fieldVal;
+
+    async function updateAndQuery(event) {
+        updateStore(event);
+        let agencyUrl;
+        if (fieldKey.startsWith("agency") || fieldKey === "foiaEmail") {
+            agencyUrl = "/api/current-user/autocomplete/agencies";
+        } else {
+
+        }
+        const agencyResults = await fetch(`${agencyUrl}?field=${fieldKey}&q=${event.target.value}`)
+            .then(response => response.json())
+            .then(data => data.results)
+            .catch((err) => {console.error(err);});
+        agencies = event.target.value === "" ? [] : agencyResults;
+    }
 
     function updateStore(event) {
         const newVal = event.target.value;
@@ -27,7 +46,12 @@
         {/each}
     </select>
     {:else}
-    <input on:input="{updateStore}" type="{fieldType}" id="{idField}" name="{nameField}" value={fieldVal}>
+    <input on:input="{updateAndQuery}" list="{autocompleteField}" id="{idField}" name="{nameField}" value={fieldVal}>
+    <datalist id="{autocompleteField}" class="autocomplete__results">
+        {#each firstAgencies as agency}
+        <option value="{agency[fieldKey]}">
+        {/each}
+    </datalist>
     {/if}
 </div>
 

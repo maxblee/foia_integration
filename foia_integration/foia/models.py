@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import RegexValidator
 from django.db import models
 import us
 
@@ -82,3 +83,33 @@ class PRATemplate(models.Model):
         state = "General" if self.state is None else self.state.info.name
         upload = str(self.upload_date)
         return f"{user} {state} Template ({upload})"
+
+class Entity(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE
+    )
+    # Require a unique constraint because we have to look up from a select/datalist
+    # and we want to know we're filing the right thing.
+    name = models.CharField(max_length=200, unique=True)
+    street_address = models.CharField(max_length=200, blank=True)
+    municipality = models.CharField(max_length=100, blank=True)
+    # allow for nulls to let people store e.g. foreign companies
+    state = models.ForeignKey(State, blank=True, null=True, on_delete=models.CASCADE)
+    zip_code = models.CharField(
+        max_length=10,
+        validators=[RegexValidator(
+            regex=r"^[0-9]{5}\-?(?:[0-9]{4})?$", 
+            message="The ZIP code does not match a NNNNN or NNNNN-NNNN format",
+            )],
+        blank=True
+    )
+    # again, allow for blanks to allow people to use this tool to manage sources, contacts, etc
+    pra_email = models.EmailField("Public Records Email", null=True, blank=True, unique=True)
+    is_agency = models.BooleanField("Is the entity a public body (i.e. subject to public records law)?", default=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "entities"

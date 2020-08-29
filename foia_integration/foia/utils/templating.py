@@ -15,6 +15,8 @@ DESC_TO_TEMPLATE = {'Requested Records': 'requestedRecords',
  'Subject Line': 'subject',
  'Agency Public Records Email Address': 'foiaEmail'}
 
+TEMPLATE_TO_DESC = {v:k for k, v in DESC_TO_TEMPLATE.items()}
+
 def encode_template(template_str: str):
     json_format = {
         "boilerplate": "",
