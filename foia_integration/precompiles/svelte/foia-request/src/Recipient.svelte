@@ -102,7 +102,6 @@
         display: flex;
         flex-direction: column;
         margin-bottom: 10px;
-        background-color: rgba(255,202,122,1);
         color: black;
     }
 

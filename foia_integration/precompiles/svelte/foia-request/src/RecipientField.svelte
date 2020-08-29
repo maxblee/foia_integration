@@ -1,4 +1,5 @@
 <script>
+import { each } from "svelte/internal";
     import { recipients, start } from "./store.js";
 
     export let idx = 0;
@@ -6,6 +7,7 @@
     export let fieldType = "text";
     export let options = [];
     export let required = false;
+    let autocompleteSelected;
     let agencies = [];
     // just show top 5 agencies
     $: firstAgencies = agencies.slice(0, 5);
@@ -35,6 +37,48 @@
         const newVal = event.target.value;
         recipients.changeItem($recipients, idx, fieldKey, newVal);
     }
+
+    function autocompleteKeydown(event) {
+        switch(event.key) {
+            case "ArrowDown":
+                if (autocompleteSelected === undefined) {
+                    autocompleteSelected = 0;
+                } else if (autocompleteSelected < firstAgencies.length - 1) {
+                    autocompleteSelected += 1;
+                } else {
+                    autocompleteSelected = undefined;
+                }
+                break;
+            case "ArrowUp":
+                if (autocompleteSelected === undefined) {
+                    autocompleteSelected = firstAgencies.length - 1;
+                } else if (autocompleteSelected === 0) {
+                    autocompleteSelected = undefined;
+                } else {
+                    autocompleteSelected -= 1;
+                }
+                break;
+            case "Enter":
+                if (autocompleteSelected !== undefined) {
+                    updateData();
+                }
+                break;
+        }
+    }
+
+    function autocompleteClick(event) {
+        autocompleteSelected = parseInt(event.target.id.match(/[0-9]$/g));
+        updateData();
+    }
+
+    function updateData() {
+        const selectedItem = firstAgencies[autocompleteSelected];
+        for (let inputField of Object.keys(selectedItem)) {
+            document.getElementById(`id_${inputField}-${idx}`).value = selectedItem[inputField];
+        }
+        agencies = [];
+        autocompleteSelected = undefined;
+    }
 </script>
 
 <div class="form__field">
@@ -46,12 +90,25 @@
         {/each}
     </select>
     {:else}
-    <input on:input="{updateAndQuery}" list="{autocompleteField}" id="{idField}" name="{nameField}" value={fieldVal}>
-    <datalist id="{autocompleteField}" class="autocomplete__results">
-        {#each firstAgencies as agency}
-        <option value="{agency[fieldKey]}">
-        {/each}
-    </datalist>
+    <div class="text__container">
+        {#if firstAgencies.length > 0}
+        <div class="sr-only" role="status" aria-live="polite">
+            There are {firstAgencies.length} matching agencies. Use the arrow keys to browse.
+        </div>
+        {/if}
+        <input on:keydown="{autocompleteKeydown}" on:input="{updateAndQuery}" list="{autocompleteField}" id="{idField}" name="{nameField}" value={fieldVal} autocomplete="off" aria-autocomplete="list">
+        <div class="autocomplete__results">
+            <div class="autocomplete__list" role="listbox" tabindex="0">
+                {#each firstAgencies as agency, i}
+                {#if autocompleteSelected === i}
+                <div on:click="{autocompleteClick}" class="autocomplete__item selected" aria-selected="true" id="{`${autocompleteField}-${i}`}" role="option" tabindex="-1">{agency["agencyName"]}</div>
+                {:else}
+                <div on:click="{autocompleteClick}" class="autocomplete__item" id="{`${autocompleteField}-${i}`}" role="option" tabindex="-1">{agency["agencyName"]}</div>
+                {/if}
+                {/each}
+            </div>
+        </div>
+    </div>
     {/if}
 </div>
 
@@ -99,5 +156,13 @@
 
     :global(span.required::after) {
         content: " (Required)";
+    }
+
+    .selected, .autocomplete__item:hover, .autocomplete__item:focus {
+        background-color: rgb(187,187,187);
+    }
+
+    .autocomplete__item:hover, .autocomplete__item:focus {
+        cursor: pointer;
     }
 </style>

@@ -125,5 +125,5 @@ def agency_by_name(request):
     return Response({
         "status": 400,
         "message": f"Invalid query. Must pass 'q' and 'field' parameters with valid values."
-    }, status=status.HTTP_404_NOT_FOUND)
+    }, status=status.HTTP_400_BAD_REQUEST)
     
