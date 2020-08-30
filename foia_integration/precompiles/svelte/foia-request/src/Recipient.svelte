@@ -5,6 +5,7 @@
     export let idx = 0;
 
     let currentTemplate = "";
+    let toggleDisplay = false;
 
     let startUrl = "/api/current-user/";
     export let states;
@@ -52,6 +53,13 @@
             .catch((err) => {console.error(err);});
         currentTemplate = response;
     }
+
+    async function togglePreview(event) {
+        toggleDisplay = !toggleDisplay;
+        if (toggleDisplay) {
+            previewSubmission(event);
+        }
+    }
 </script>
 
 <div class="recipient__item" id="recipient-{idx}">
@@ -87,10 +95,17 @@
         </div>
     </div>
     <div class="expand__preview">
-        <button id="expand-{idx}" on:click="{previewSubmission}">Preview Request</button>
+        {#if !toggleDisplay}
+        <button id="expand-{idx}" on:click="{togglePreview}">Preview Request</button>
+        <div id="template-{idx}" class="template__preview hidden">
+            {currentTemplate}
+        </div>
+        {:else}
+        <button id="expand-{idx}" on:click="{togglePreview}">Hide Preview</button>
         <div id="template-{idx}" class="template__preview">
             {currentTemplate}
         </div>
+        {/if}
     </div>
 </div>
 
@@ -129,5 +144,9 @@
 
     .template__preview {
         white-space: pre-wrap;
+    }
+
+    .hidden {
+        display: none;
     }
 </style>

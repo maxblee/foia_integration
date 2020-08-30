@@ -9,5 +9,6 @@ urlpatterns = [
     re_path(r"^api/current-user/states$", api.get_states),
     re_path(r"^api/current-user/template/(?P<state_abbr>[A-Za-z]{2})$", api.get_template),
     # autocomplete
-    re_path(r"^api/current-user/autocomplete/agencies$", api.agency_by_name)
+    re_path(r"^api/current-user/autocomplete/agencies$", api.agency_by_name),
+    re_path(r"api/current-user/autocomplete/sources$", api.sources_by_agency)
 ]

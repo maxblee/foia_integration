@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 
-from foia.models import PRATemplate, State, Entity
+from foia.models import PRATemplate, State, Entity, Source
 from foia.utils import auth, common_queries
 from foia.utils.templating import TEMPLATE_TO_DESC
 
@@ -127,3 +127,38 @@ def agency_by_name(request):
         "message": f"Invalid query. Must pass 'q' and 'field' parameters with valid values."
     }, status=status.HTTP_400_BAD_REQUEST)
     
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def sources_by_agency(request):
+    """Finds a list of sources from an agency email address."""
+    params = request.query_params
+    if 'agency' not in params:
+        return Response({
+            "status": 400, 
+            "message": "You must pass an agency email using the 'agency' param"
+        }, status=status.HTTP_400_BAD_REQUEST)
+    source_entity = Entity.objects.filter(user=request.user, pra_email=params["agency"])
+    if not source_entity.exists():
+        return Response({
+            "status": 404,
+            "message": "Could not find matching agency"
+        }, status=status.HTTP_404_NOT_FOUND)
+    # sorted by email which is unique
+    source_entity = source_entity.first()
+    sources = Source.objects.filter(
+        entity=source_entity, 
+        is_records_officer=True, 
+        user=request.user
+    )
+    source_results = [{
+        "name": source.full_name, 
+        "firstName": source.first_name, 
+        "lastName": source.last_name,
+        "unique": source.unique_representation
+    } for source in sources]
+    return Response({
+        "results": source_results,
+        "numResults": sources.count(),
+        "agencyEmail": params["agency"]
+    })

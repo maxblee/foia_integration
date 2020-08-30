@@ -1,6 +1,9 @@
+import uuid
+
 from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
+from django.utils.functional import cached_property
 import us
 
 # Create your models here.
@@ -113,3 +116,36 @@ class Entity(models.Model):
 
     class Meta:
         verbose_name_plural = "entities"
+
+class Source(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE
+    )
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    title = models.CharField(max_length=200, blank=True)
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, null=True, blank=True)
+    is_records_officer = models.BooleanField(
+        "Is this person a public records officer?",
+        default=False
+    )
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+    @cached_property
+    def unique_representation(self):
+        first_lower = "-".join(self.first_name.lower().split())
+        last_lower = "-".join(self.last_name.lower().split())
+        name_matches = Source.objects.filter(
+            user=self.user, 
+            first_name__iexact=self.first_name,
+            last_name__iexact=self.last_name
+        ).count()
+        suffix = "" if name_matches <= 1 else f".{name_matches}"
+        return f"{first_lower}.{last_lower}{suffix}"
+
+    def __str__(self):
+        return self.full_name

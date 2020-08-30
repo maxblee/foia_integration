@@ -45,3 +45,4 @@ function createRecipients() {
 export const recipients = createRecipients();
 export const start = init;
 export const count = derived(recipients, $recipients => $recipients.length);
+export const sources = writable([]);

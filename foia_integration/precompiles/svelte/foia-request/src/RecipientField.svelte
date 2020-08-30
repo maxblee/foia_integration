@@ -1,6 +1,6 @@
 <script>
 import { each } from "svelte/internal";
-    import { recipients, start } from "./store.js";
+    import { recipients, start, sources } from "./store.js";
 
     export let idx = 0;
     export let fieldKey = "recipientName";
@@ -23,14 +23,14 @@ import { each } from "svelte/internal";
         let agencyUrl;
         if (fieldKey.startsWith("agency") || fieldKey === "foiaEmail") {
             agencyUrl = "/api/current-user/autocomplete/agencies";
+            const agencyResults = await fetch(`${agencyUrl}?field=${fieldKey}&q=${event.target.value}`)
+                .then(response => response.json())
+                .then(data => data.results)
+                .catch((err) => {console.error(err);});
+            agencies = event.target.value === "" ? [] : agencyResults;
         } else {
 
         }
-        const agencyResults = await fetch(`${agencyUrl}?field=${fieldKey}&q=${event.target.value}`)
-            .then(response => response.json())
-            .then(data => data.results)
-            .catch((err) => {console.error(err);});
-        agencies = event.target.value === "" ? [] : agencyResults;
     }
 
     function updateStore(event) {
@@ -38,7 +38,7 @@ import { each } from "svelte/internal";
         recipients.changeItem($recipients, idx, fieldKey, newVal);
     }
 
-    function autocompleteKeydown(event) {
+    async function autocompleteKeydown(event) {
         switch(event.key) {
             case "ArrowDown":
                 if (autocompleteSelected === undefined) {
@@ -66,16 +66,22 @@ import { each } from "svelte/internal";
         }
     }
 
-    function autocompleteClick(event) {
+    async function autocompleteClick(event) {
         autocompleteSelected = parseInt(event.target.id.match(/[0-9]$/g));
         updateData();
     }
 
-    function updateData() {
+    async function updateData() {
         const selectedItem = firstAgencies[autocompleteSelected];
         for (let inputField of Object.keys(selectedItem)) {
-            document.getElementById(`id_${inputField}-${idx}`).value = selectedItem[inputField];
+            recipients.changeItem($recipients, idx, inputField, selectedItem[inputField]);
         }
+        const praEmail = $recipients[idx].foiaEmail.value;
+        const agencySources = await fetch(`/api/current-user/autocomplete/sources?agency=${praEmail}`)
+            .then(response => response.json())
+            .then(data => data.results)
+            .catch(err => {console.error(err);});
+        sources.update(() => agencySources);
         agencies = [];
         autocompleteSelected = undefined;
     }
@@ -96,9 +102,10 @@ import { each } from "svelte/internal";
             There are {firstAgencies.length} matching agencies. Use the arrow keys to browse.
         </div>
         {/if}
-        <input on:keydown="{autocompleteKeydown}" on:input="{updateAndQuery}" list="{autocompleteField}" id="{idField}" name="{nameField}" value={fieldVal} autocomplete="off" aria-autocomplete="list">
+        {#if fieldKey.startsWith("agency") || fieldKey === "foiaEmail"}
+        <input on:keydown="{autocompleteKeydown}" on:input="{updateAndQuery}" id="{idField}" name="{nameField}" value={fieldVal} autocomplete="off" aria-autocomplete="list">
         <div class="autocomplete__results">
-            <div class="autocomplete__list" role="listbox" tabindex="0">
+            <div class="autocomplete__list" role="listbox" tabindex="-1">
                 {#each firstAgencies as agency, i}
                 {#if autocompleteSelected === i}
                 <div on:click="{autocompleteClick}" class="autocomplete__item selected" aria-selected="true" id="{`${autocompleteField}-${i}`}" role="option" tabindex="-1">{agency["agencyName"]}</div>
@@ -108,6 +115,14 @@ import { each } from "svelte/internal";
                 {/each}
             </div>
         </div>
+        {:else}
+        <input list="{autocompleteField}" id="{idField}" name="{nameField}" value={fieldVal}>
+        <datalist id="{autocompleteField}">
+            {#each $sources as source}
+            <option value="{source['name']}">
+            {/each}
+        </datalist>
+        {/if}
     </div>
     {/if}
 </div>
