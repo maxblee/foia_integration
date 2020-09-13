@@ -1,5 +1,5 @@
 <script>
-	import {recipients, count, start} from "./store.js";
+	import {recipients, count, start, sources} from "./store.js";
 	import Recipient from "./Recipient.svelte";
 	import Request from "./Request.svelte";
 	let states = fetch("/api/current-user/states")
@@ -8,14 +8,9 @@
 		.catch(e => {console.error(e);});
 
 	let uploadData;
-	$: console.log($recipients);
 		
 	async function handleUpload(event) {
 		let file = event.target.files[0];
-		// remove items so you don't get an extra field
-		while ($recipients.length !== 0) {
-			recipients.deleteItem($recipients.length - 1);
-		}
 		let idx = $recipients.length -1;
 		// from https://stackoverflow.com/questions/56427009/how-to-return-papa-parsed-csv-via-promise-async-await
 		const res = new Promise((resolve, reject) => {
@@ -23,9 +18,12 @@
 				header:true,
 				skipEmptyLines: true,
 				step: function(results, _file) {
-					idx += 1;
 					if (Object.keys(results.data).every(d => Object.keys(start).includes(d))) {
-						recipients.addItem();
+						if (!Object.values($recipients[idx]).every(d => d.value === "")) {
+							idx += 1;
+							recipients.addItem();
+							sources.addItem();
+						}
 					} else {
 						reject(new Error("invalid field"));
 					}
@@ -53,12 +51,9 @@
 	<div class="section__container">
 		<h2>Information about the Recipients</h2>
 		<p>You can manually add the agencies or you can upload a CSV.</p>
-		<p>Note: Uploading a CSV will delete all existing data. If you want
-			to add agencies that aren't in your CSV file, you should add them
-			after uploading the CSV.
-		</p>
-		<input type="file" id="csv_upload" accept=".csv" on:change={handleUpload}>
-		<div class="upload__info">
+		<div class="upload__container">
+			<input type="file" id="csv_upload" accept=".csv" on:change={handleUpload}>
+			<div class="upload__info">
 			{#if uploadData !== undefined}
 			{#await uploadData}
 				<p>Loading</p>
@@ -68,11 +63,23 @@
 				<p>Could not process file. Make sure it is a .csv file with the correct fields.</p>
 			{/await}
 			{/if}
+			</div>
 		</div>
 		{#each $recipients as _recipient, idx}
 			<Recipient states={states} idx="{idx}"/>
 		{/each}
 		<input type="hidden" name="num-items" value="{$count}">
+	</div>
+	<div class="submit__container">
+		<div class="submit__item">
+			<input type="submit" name="send-requests" id="id_send-requests" value="Send Requests">
+		</div>
+		<div class="submit__item">
+			<input type="submit" name="schedule-requests" id="id_schedule-requests" value="Schedule Requests">
+		</div>
+		<div class="submit__item">
+			<input type="submit" name="save-requests" id="id_save-requests" value="Save Requests">
+		</div>
 	</div>
 </div>
 
@@ -84,11 +91,8 @@
 	}
 
 	.section__container {
-		border: 1px solid rgb(170,170,170);
-		border-radius: 2px;
 		padding: 5px;
 		margin-bottom: 5px;
-		background-color: rgb(240,240,240);
 		font-size: 1.2rem;
 	}
 
@@ -101,4 +105,31 @@
             width: 65%;
         }
     }
+
+	.upload__container {
+		display: flex;
+		justify-content: center;
+		padding: 10px;
+		font-size: 1.2rem;
+	}
+	.upload__container > input {
+		font-size: 1.2rem;
+	}
+	.submit__container {
+		display: flex;
+		justify-content: end;
+		margin-bottom: 1.4rem;
+	}
+	.submit__item {
+		padding: 5px;
+	}
+
+	.submit__item > input {
+		font-size: 1.1rem;
+	}
+	
+	.section__container > p {
+		margin: 0;
+		text-align: center;
+	}
 </style>

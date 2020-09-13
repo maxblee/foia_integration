@@ -1,7 +1,8 @@
 import { writable, derived } from "svelte/store";
 
 const init = {
-    "recipientName": {text: "Recipient Name", value:""},
+    "recipientFirstName": {text: "Recipient First Name", value:""},
+    "recipientLastName": {text: "Recipient Last Name", value:""},
     "agencyName": {text: "Agency Name", value: ""},
     "foiaEmail": {text: "Public Records Email", value: ""},
     "agencyState": {text: "Agency State", value: ""},
@@ -10,6 +11,26 @@ const init = {
     "agencyZip": {text: "Agency ZIP Code", value: ""}
 };
 Object.freeze(init);
+
+function createSources() {
+    const {subscribe, set, update} = writable([[]]);
+    const addItem = () => update(n => [...n, []]);
+    const deleteItem = (idx) => {
+        return update(n => [...n.slice(0, idx), ...n.slice(idx+1, n.length)]);
+    }
+    const newSources = (idx, sources) => {
+        return update(n => {
+            n[idx] = sources;
+            return n;
+        })
+    };
+    return {
+        subscribe,
+        addItem,
+        deleteItem,
+        newSources
+    };
+}
 
 function createRecipients() {
     
@@ -45,4 +66,10 @@ function createRecipients() {
 export const recipients = createRecipients();
 export const start = init;
 export const count = derived(recipients, $recipients => $recipients.length);
-export const sources = writable([]);
+export const sources = createSources();
+export const request = writable({
+    subject: {text: "subject", value: ""},
+    requestedRecords: {text: "Requested Records", value:""},
+    expeditedProcessing: {text: "Expedited Processing Justification", value:""},
+    feeWaiver: {text: "Fee Waiver Justification", value: ""}
+});

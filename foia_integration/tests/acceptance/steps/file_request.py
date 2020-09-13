@@ -1,7 +1,10 @@
+import os
+
 from behave import given, when, then
 from django.contrib.auth.models import User
 
-from foia.models import PRATemplate, State
+from allauth.socialaccount.models import SocialAccount
+from foia.models import PRATemplate, State, Entity
 import sys; sys.path.append("..")
 import browser_handling
 
@@ -13,7 +16,8 @@ def generate_fake_agency_info(fake, idx):
     # first instantiate the dictionary without the id field exactly right
     # then change
     missing_idx = {
-        "recipientName": fake.name(),
+        "recipientFirstName": fake.first_name(),
+        "recipientLastName": fake.last_name(),
         "agencyName": f"City of {municipality}",
         "foiaEmail": fake.email(),
         "agencyStreetAddress": fake.street_address(),
@@ -50,6 +54,9 @@ def created_template(context):
     )
     context.browser.find_element_by_xpath("//input[@type='submit']").click()
 
+@given("Jason already has agency information saved")
+def save_agency_info(context):
+    assert False
 
 @when("Jason visits the request filing page")
 def visit_filing_page(context):
@@ -60,11 +67,18 @@ def visit_filing_page(context):
 def add_agency_info(context):
     context.agency_data = generate_fake_agency_info(context.fake, 0)
     send_agency_info(context.browser, context.agency_data)
+    context.browser.find_element_by_css_selector(
+        ".form__field select option[value='AK']"
+    ).click()
 
 @when("Jason adds information about the records he seeks")
 def add_record_info(context):
     context.records = context.fake.sentence()
     context.browser.find_element_by_id("id_requestedRecords").send_keys(context.records)
+
+@when("Jason starts to fill out information about the agency")
+def starts_agency_fill(context):
+    pass
 
 @then("Jason should be able to add new agencies and recipients")
 def can_add_agencies(context):
@@ -86,9 +100,13 @@ def can_remove_agencies(context):
 def can_preview_request(context):
     context.browser.find_element_by_id("expand-0").click()
     preview_content = context.browser.find_element_by_id("template-0")
+    import time; time.sleep(1)
     assert preview_content.text != ""
     expected_text = "In accordance with the Alaska Public Records Act,  AS § 40.25. 110 et seq., I am requesting {}.".format(
         context.records
     )
     assert preview_content.text == expected_text
 
+@then("Jason should be able to select the agency from a dropdown menu")
+def autocomplete_dropdown(context):
+    pass

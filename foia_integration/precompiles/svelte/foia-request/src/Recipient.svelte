@@ -1,5 +1,5 @@
 <script>
-    import { recipients, count } from "./store.js";
+    import { recipients, count, request, sources } from "./store.js";
     import RecipientField from "./RecipientField.svelte";
     
     export let idx = 0;
@@ -13,18 +13,14 @@
 
     function getTemplateInfo() {
         let templateData = {};
-        const selected = document.getElementById(`recipient-${idx}`);
-        const generalText = document.getElementById("request")
-            .getElementsByTagName("textarea");
-        const generalSubject = document.getElementById("request")
-            .getElementsByTagName("input");
-        const recipText = selected.getElementsByTagName("input");
-        const recipSelect = selected.getElementsByTagName("select");
-        const allTags = [...generalText, ...generalSubject, ...recipText, ...recipSelect];
-        for (let elem of allTags) {
-            const elemKey = elem.id.replace("id_", "").replace(`-${idx}`, "");
-            templateData[elemKey] = elem.value;
+        for (const field of Object.keys($recipients[idx])) {
+            templateData[field] = $recipients[idx][field].value;
         }
+        for (const field of Object.keys($request)) {
+            templateData[field] = $request[field].value;
+        }
+        const recipientName = `${templateData['recipientFirstName']} ${templateData['recipientLastName']}`;
+        templateData["recipientName"] = recipientName.trim() === "" ? "Public Records Officer" : recipientName.trim();
         return templateData;
     }
 
@@ -60,11 +56,22 @@
             previewSubmission(event);
         }
     }
+
+    function addRecipient() {
+        recipients.addItem();
+        sources.addItem();
+    }
+
+    function deleteRecipient() {
+        recipients.deleteItem(idx);
+        sources.deleteItem(idx);
+    }
 </script>
 
 <div class="recipient__item" id="recipient-{idx}">
     <div class="recipient__person">
-        <RecipientField idx="{idx}" fieldKey="recipientName" />
+        <RecipientField idx="{idx}" fieldKey="recipientFirstName" />
+        <RecipientField idx={idx} fieldKey="recipientLastName"/>
     </div>
     <div class="agency__general">
         <RecipientField idx="{idx}" fieldKey="agencyName" />
@@ -81,14 +88,14 @@
     <div class="new__items">
         <div class="add__item">
             {#if idx === $count - 1 }
-            <button  id="add-{idx}" on:click="{recipients.addItem}">
+            <button  id="add-{idx}" on:click="{addRecipient}">
                 <svg role="img" width="25px" viewBox="0 0 20 20" fill="currentColor" class="plus w-6 h-6"><title>Add New Item</title><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
             </button>
             {/if}
         </div>
         <div class="delete__item">
             {#if $count > 1}
-            <button id="delete-{idx}" on:click="{recipients.deleteItem(idx)}">
+            <button id="delete-{idx}" on:click="{deleteRecipient(idx)}">
                 <svg role="img" width="25px" viewBox="0 0 20 20" fill="currentColor" class="x w-6 h-6"><title>Delete This Item</title><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
             </button>
             {/if}
@@ -130,10 +137,12 @@
     }
 
     button {
-        border-radius: 25px;
-        border: 2px solid black;
+        border-radius: 1px;
+        border: none;
         cursor: pointer;
         background-color: rgba(255,202,122,1);
+        margin: 10px;
+        padding: 1px;
     }
 
     button:hover, button:focus {
@@ -142,8 +151,18 @@
         border-color: transparent   ;
     }
 
+    .expand__preview button {
+        padding: 5px;
+    }
+
     .template__preview {
         white-space: pre-wrap;
+        width: 85%;
+        margin: auto;
+        padding: 5%;
+        padding-top: 5px;
+        padding-bottom: 5px;
+        border-top: 1px solid black;
     }
 
     .hidden {
