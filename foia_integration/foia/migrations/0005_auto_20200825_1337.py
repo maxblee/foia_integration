@@ -7,18 +7,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foia', '0004_entity_user'),
+        ("foia", "0004_entity_user"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='entity',
-            name='street_address',
+            model_name="entity",
+            name="street_address",
             field=models.CharField(blank=True, max_length=200),
         ),
         migrations.AlterField(
-            model_name='entity',
-            name='zip_code',
-            field=models.CharField(blank=True, max_length=10, validators=[django.core.validators.RegexValidator(message='The ZIP code does not match a NNNNN or NNNNN-NNNN format', regex='^[0-9]{5}\\-?(?:[0-9]{4})?$')]),
+            model_name="entity",
+            name="zip_code",
+            field=models.CharField(
+                blank=True,
+                max_length=10,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        message="The ZIP code does not match a NNNNN or NNNNN-NNNN format",
+                        regex="^[0-9]{5}\\-?(?:[0-9]{4})?$",
+                    )
+                ],
+            ),
         ),
     ]

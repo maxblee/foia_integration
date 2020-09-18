@@ -1,10 +1,11 @@
 import functools
-from typing import Any, Dict, Optional
 
 from allauth.socialaccount.models import SocialAccount, SocialToken, SocialApp
 from google.oauth2.credentials import Credentials
 import googleapiclient.discovery
-from django.http import HttpRequest, HttpResponseForbidden
+from django.http import HttpResponseForbidden
+from rest_framework import permissions
+
 
 def user_has_gmail(user):
     """Tests whether a user has an attached GMail account."""
@@ -13,7 +14,8 @@ def user_has_gmail(user):
     google_user = SocialAccount.objects.filter(provider="google", user=user)
     return google_user.exists()
 
-def get_user_service(request: HttpRequest) -> Optional[googleapiclient.discovery.Resource]:
+
+def get_user_service(request):
     """Gets a GMAIL Service object given.
 
     Args:
@@ -32,7 +34,9 @@ def get_user_service(request: HttpRequest) -> Optional[googleapiclient.discovery
         return None
     # NOTE: I don't believe there are cases where the user would have multiple accounts with the same provider but idk for sure
     google_user = user.first()
-    social_token = SocialToken.objects.filter(app_id=google_api.id, account_id=google_user.id)
+    social_token = SocialToken.objects.filter(
+        app_id=google_api.id, account_id=google_user.id
+    )
     if not social_token.exists():
         return None
     # The SocialToken is unique on account_id + usr_id
@@ -42,35 +46,24 @@ def get_user_service(request: HttpRequest) -> Optional[googleapiclient.discovery
     token_url = "https://accounts.google.com/o/oauth2/token"
     scopes = ["https://mail.google.com"]
     creds = Credentials(
-        auth_token, 
+        auth_token,
         refresh_token=refresh_token,
         token_uri=token_url,
-        client_id=client_id, 
-        client_secret=client_secret, 
-        scopes=scopes
+        client_id=client_id,
+        client_secret=client_secret,
+        scopes=scopes,
     )
     # TODO: Have better/more clear error handling for this, at least at view level
     service = googleapiclient.discovery.build("gmail", "v1", credentials=creds)
     return service, google_user.uid
 
-def show_view_or_403(test_func, msg_403="Permission Denied."):
-    """Modification of django's user_passes_test that doesn't redirect.
-    
-    This is designed for dealing with permission denials
-    on e.g. APIs that should just return 403 responses.
-    Based on user_passes_test 
-    https://github.com/django/django/blob/master/django/contrib/auth/decorators.py
 
-    Args:
-        test_func: The function testing e.g. user permissions.
-        msg_403: The message you want to display to users on a 403
-            error.
+class GooglePermission(permissions.BasePermission):
     """
-    def decorator(view_func):
-        @functools.wraps(view_func)
-        def _wrapped_view(request, *args, **kwargs):
-            if test_func(request.user):
-                return view_func(request, *args, **kwargs)
-            return HttpResponseForbidden("Permission Denied.")
-        return _wrapped_view
-    return decorator
+    Permission check to make sure user is authenticated and
+    has an associated Google account. (Required for views
+    and post and get methods that use Google's API.
+    """
+
+    def has_permission(self, request, view):
+        return user_has_gmail(request.user)

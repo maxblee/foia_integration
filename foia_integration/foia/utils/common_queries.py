@@ -1,11 +1,16 @@
 import functools
 from foia.models import State
 
+
 def order_states():
-    return sorted([
-        {"abbr": state.abbr, "name": state.info.name} 
-        for state in State.objects.all()
-    ], key=functools.cmp_to_key(state_ordering))
+    return sorted(
+        [
+            {"abbr": state.abbr, "name": state.info.name}
+            for state in State.objects.all()
+        ],
+        key=functools.cmp_to_key(state_ordering),
+    )
+
 
 def state_ordering(a, b):
     """Order states by abbreviation, but with United States at top"""

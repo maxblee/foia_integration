@@ -1,7 +1,5 @@
-import uuid
-
 from django.conf import settings
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinLengthValidator
 from django.db import models
 from django.utils.functional import cached_property
 import us
@@ -9,34 +7,37 @@ import us
 # Create your models here.
 class State(models.Model):
     """Represents a state (or the federal government) for a FOIA request."""
+
     abbr = models.CharField(
-        "abbreviation", 
-        max_length=2, 
+        "abbreviation",
+        max_length=2,
         help_text="The 2-letter state (or federal) abbreviation",
-        unique=True
+        unique=True,
     )
-    public_records_act_name = models.CharField("name of state public records act", max_length=200)
+    public_records_act_name = models.CharField(
+        "name of state public records act", max_length=200
+    )
     maximum_response_time = models.PositiveSmallIntegerField(
         help_text="What is the maximum time allowed for an initial response?",
         blank=True,
-        null=True
+        null=True,
     )
     maximum_extension_time = models.PositiveSmallIntegerField(
         help_text="What is the maximum amount of time allowed for an extension?",
         blank=True,
-        null=True
+        null=True,
     )
     business_days = models.BooleanField(
         "Response time is in Business Days",
         help_text="Is the maximum response time in business days or calendar days?",
         blank=True,
-        null=True
+        null=True,
     )
     business_days_extension = models.BooleanField(
         "Extension time is in Business Days",
         help_text="Is the maximum time allowed for an extension in business days or calendar days?",
         blank=True,
-        null=True
+        null=True,
     )
 
     @property
@@ -72,10 +73,10 @@ class State(models.Model):
     class Meta:
         ordering = ["abbr"]
 
+
 class PRATemplate(models.Model):
     template_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
     )
     state = models.ForeignKey(State, on_delete=models.CASCADE, null=True, blank=True)
     template = models.JSONField("JSON version of public records template")
@@ -87,11 +88,9 @@ class PRATemplate(models.Model):
         upload = str(self.upload_date)
         return f"{user} {state} Template ({upload})"
 
+
 class Entity(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     # Require a unique constraint because we have to look up from a select/datalist
     # and we want to know we're filing the right thing.
     name = models.CharField(max_length=200, unique=True)
@@ -101,15 +100,22 @@ class Entity(models.Model):
     state = models.ForeignKey(State, blank=True, null=True, on_delete=models.CASCADE)
     zip_code = models.CharField(
         max_length=10,
-        validators=[RegexValidator(
-            regex=r"^[0-9]{5}\-?(?:[0-9]{4})?$", 
-            message="The ZIP code does not match a NNNNN or NNNNN-NNNN format",
-            )],
-        blank=True
+        validators=[
+            RegexValidator(
+                regex=r"^[0-9]{5}\-?(?:[0-9]{4})?$",
+                message="The ZIP code does not match a NNNNN or NNNNN-NNNN format",
+            )
+        ],
+        blank=True,
     )
     # again, allow for blanks to allow people to use this tool to manage sources, contacts, etc
-    pra_email = models.EmailField("Public Records Email", null=True, blank=True, unique=True)
-    is_agency = models.BooleanField("Is the entity a public body (i.e. subject to public records law)?", default=True)
+    pra_email = models.EmailField(
+        "Public Records Email", null=True, blank=True, unique=True
+    )
+    is_agency = models.BooleanField(
+        "Is the entity a public body (i.e. subject to public records law)?",
+        default=True,
+    )
 
     def __str__(self):
         return self.name
@@ -117,18 +123,15 @@ class Entity(models.Model):
     class Meta:
         verbose_name_plural = "entities"
 
+
 class Source(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     title = models.CharField(max_length=200, blank=True)
     entity = models.ForeignKey(Entity, on_delete=models.CASCADE, null=True, blank=True)
     is_records_officer = models.BooleanField(
-        "Is this person a public records officer?",
-        default=False
+        "Is this person a public records officer?", default=False
     )
 
     @property
@@ -140,12 +143,53 @@ class Source(models.Model):
         first_lower = "-".join(self.first_name.lower().split())
         last_lower = "-".join(self.last_name.lower().split())
         name_matches = Source.objects.filter(
-            user=self.user, 
+            user=self.user,
             first_name__iexact=self.first_name,
-            last_name__iexact=self.last_name
+            last_name__iexact=self.last_name,
         ).count()
         suffix = "" if name_matches <= 1 else f".{name_matches}"
         return f"{first_lower}.{last_lower}{suffix}"
 
     def __str__(self):
         return self.full_name
+
+
+class RequestContent(models.Model):
+    """A class for representing the core
+    content of a PRA request.
+    """
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    subject_line = models.CharField(max_length=80)
+    content = models.TextField()
+    expedited_processing = models.TextField(
+        verbose_name="justification for expedited processing", blank=True
+    )
+    fee_waiver = models.TextField(verbose_name="fee waiver justification", blank=True)
+    date_filed = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "FOIA Request Body"
+        verbose_name_plural = "FOIA Request Bodies"
+        ordering = ("-date_filed",)
+
+    def __str__(self):
+        return self.subject_line
+
+
+class RequestItem(models.Model):
+    """Represents a single FOIA request"""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    request_info = models.ForeignKey(RequestContent, on_delete=models.CASCADE)
+    agency = models.ForeignKey(Entity, on_delete=models.CASCADE)
+    recipient = models.ForeignKey(
+        Source, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    @cached_property
+    def readable_name(self):
+        return f"{self.request_info.subject_line}: {self.agency.name}"
+
+    def __str__(self):
+        return self.readable_name
