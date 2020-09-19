@@ -1,9 +1,18 @@
+from apscheduler.schedulers.background import BackgroundScheduler
+from django_apscheduler.jobstores import DjangoJobStore, register_events
 from django.conf import settings
-from django.core.validators import RegexValidator, MinLengthValidator
+from django.core.validators import RegexValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.translation import gettext_lazy as _
 import us
 
+scheduler = BackgroundScheduler()
+scheduler.add_jobstore(DjangoJobStore(), "default")
+register_events(scheduler)
+scheduler.start()
+print("Scheduler Started")
 # Create your models here.
 class State(models.Model):
     """Represents a state (or the federal government) for a FOIA request."""
@@ -54,6 +63,18 @@ class State(models.Model):
         if hasattr(self.info, lookup_field):
             return getattr(self.info, lookup_field)
         return None
+
+    @property
+    def describe_response_time(self):
+        num_days = self.maximum_response_time
+        business_days = self.business_days
+        if num_days is None or business_days:
+            response_time = ""
+        elif business_days:
+            response_time = f" within {num_days} business days"
+        else:
+            response_time = f" within {num_days} days"
+        return f"I look forward to hearing from you{response_time}."
 
     @property
     def foia_guide(self):
@@ -186,6 +207,11 @@ class RequestItem(models.Model):
     recipient = models.ForeignKey(
         Source, on_delete=models.SET_NULL, null=True, blank=True
     )
+    template = models.ForeignKey(
+        PRATemplate, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    # mostly exists to check to see if any requests failed/need to be resent
+    request_sent = models.BooleanField(default=False)
 
     @cached_property
     def readable_name(self):
@@ -193,3 +219,42 @@ class RequestItem(models.Model):
 
     def __str__(self):
         return self.readable_name
+
+class Contact(models.Model):
+    """Represents an attempted or actual contact.
+
+    An abstract model for emails, phone calls,
+    and in-person visits."""
+
+    class UserRole(models.TextChoices):
+        """Represents the role a user took
+        (e.g. initiated, followed-up, received)"""
+        USER_INITIATED = "i", _("Initiated Contact")
+        USER_FOLLOW_UP = "f", _("Followed Up")
+        USER_RESPONSE = "r", _("Responded to Contact")
+        RECIPIENT_INITIATED = "ri", _("Source initiated contact")
+        RECIPIENT_NOTIFICATION = "rn", _("Source sent notification")
+        RECIPIENT_RESPONSE = "rr", _("Source responded")
+        RECIPIENT_FOLLOW_UP = "rf", _("Source followed up")
+
+    class ContactMethod(models.TextChoices):
+        EMAIL = "r", _("E-mail")
+        PHONE = "p", _("Phone")
+        MESSAGING = "m", _("Messaging system (not email)")
+        OTHER = "o", _("Other")
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    contact_type = models.CharField(max_length=2, choices=UserRole.choices)
+    contact_method = models.CharField(max_length=1, choices=ContactMethod.choices)
+    responding_to = models.ForeignKey("self", on_delete=models.SET_NULL, null=True)
+    contact_date = models.DateTimeField(default=timezone.now)
+    related_request = models.ForeignKey(RequestItem, null=True, on_delete=models.SET_NULL)
+    notes = models.TextField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+class GMailContact(Contact):
+
+    thread_id = models.CharField(max_length=64)
+

@@ -1,19 +1,16 @@
-import collections
 import re
 from urllib.parse import urlencode
 
-from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 from google.auth.exceptions import RefreshError
 
 from foia.utils import auth, templating, common_queries
-from foia.models import State, PRATemplate, Entity, Source
+from foia.models import State, PRATemplate
 
 # Create your views here.
 

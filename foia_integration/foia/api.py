@@ -1,8 +1,11 @@
 import collections
+import logging
+import time
 
 from django.core.exceptions import ValidationError
 from django.forms import model_to_dict
 from django.http import JsonResponse
+from django.utils import timezone
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -13,8 +16,15 @@ from rest_framework.decorators import (
 )
 from rest_framework.response import Response
 
-from foia.models import PRATemplate, State, Entity, Source, RequestContent, RequestItem
+from foia.models import PRATemplate, State, Entity, Source, RequestContent, RequestItem, scheduler, GMailContact
 from foia.utils import auth, common_queries, templating
+
+logger = logging.getLogger("foia_send")
+logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler("reports/foia_sending.log")
+fh.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+
 
 # for creating sources, etc and marking whether they're new (need to be saved)
 entity_item = collections.namedtuple("entity_item", "entity newly_created")
@@ -45,33 +55,16 @@ def get_template(request, state_abbr):
             status=status.HTTP_404_NOT_FOUND,
         )
     expected_state = expected_state.first()
-    # first try to see if the user has templates for the state
-    state_templates = PRATemplate.objects.filter(
-        state=expected_state, template_user=request.user
-    ).order_by("-upload_date")
-    if state_templates.exists():
-        template = state_templates.first()
-    # then, try to see if the user has uploaded *any* templates
-    else:
-        generic_template = PRATemplate.objects.filter(
-            state=None, template_user=request.user
-        ).order_by("-upload_date")
-        if not generic_template.exists():
-            return Response(
+    template = templating.get_template_from_state(request.user, expected_state)
+    if template is None:
+        return Response(
                 {"status": 404, "message": "Could not find template"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        template = generic_template.first()
     json_template = template.template
-    json_template["state"] = state_abbr
-    max_resp = expected_state.maximum_response_time
-    if expected_state.business_days:
-        response_time = f" within {max_resp} business days"
-    else:
-        response_time = f" within {max_resp} days"
-    max_resp_str = response_time if max_resp is not None else ""
+    json_template["maxRespTime"] = expected_state.describe_response_time
     json_template["praName"] = expected_state.public_records_act_name
-    json_template["maxRespTime"] = f"I look forward to hearing from you{max_resp_str}."
+    json_template["state"] = expected_state.abbr
     response = JsonResponse(json_template)
     return response
 
@@ -222,8 +215,36 @@ def send_requests(request, req_type):
                 "recipientErrors": recipient_error_dict,
             }
         )
+    if req_type == "send":
+        file_requests(request, request_info.requestitem_set.all())
+        # scheduler.add_job(file_requests, "date", args=[request, request_info.requestitem_set.all()])
     return Response({"status": "ok",})
 
+def file_requests(request, pra_requests):
+    """Sends the public records requests that you just saved."""
+    service, uid = auth.get_user_service(request)
+    for request_item in pra_requests:
+        raw_message = templating.form_email(request_item)
+        sent_message = (
+            service.users()
+            .messages()
+            .send(userId=uid, body=raw_message)
+            .execute()
+        )
+        if "error" in sent_message:
+            logger.error(f"{timezone.now()}\n{sent_message}\n\n")
+        else:
+            request_item.request_sent = True
+            request_item.save()
+            GMailContact.objects.create(
+                user=request.user,
+                contact_type=GMailContact.UserRole.USER_INITIATED,
+                contact_method=GMailContact.ContactMethod.EMAIL,
+                related_request=request_item,
+                thread_id=sent_message["threadId"]
+            )
+            # reduce likelihood of rate limiting
+            time.sleep(0.5)
 
 def _foia_request_is_valid_format(data):
     recipient_mapping = set(templating.SOURCE_MAPPING.keys()) | set(

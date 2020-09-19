@@ -241,15 +241,15 @@ class SourceAgencyRequest(FoiaAPITestCase):
         resp = self.send_get({"agency": first_entity.pra_email})
         assert resp.status_code == status.HTTP_200_OK
         assert resp.data["numResults"] == 0
-        source = self.setUpSource(first_entity)
+        self.setUpSource(first_entity)
         resp = self.send_get({"agency": first_entity.pra_email})
         assert resp.status_code == status.HTTP_200_OK
         assert resp.data["numResults"] == 1
-        source = self.setUpSource(first_entity)
+        self.setUpSource(first_entity)
         resp = self.send_get({"agency": first_entity.pra_email})
         assert resp.status_code == status.HTTP_200_OK
         assert resp.data["numResults"] == 2
-        source = self.setUpSource(first_entity, is_records_officer=False)
+        self.setUpSource(first_entity, is_records_officer=False)
         resp = self.send_get({"agency": first_entity.pra_email})
         assert resp.status_code == status.HTTP_200_OK
         assert resp.data["numResults"] == 2
@@ -345,7 +345,7 @@ class FoiaRequestTestCase(FoiaAPITestCase):
         self.check_results(recipient, request)
 
     def test_sending_multiple_recipients_saves_multiple_requests(self):
-        """If you send multiple recipients through the form, 
+        """If you send multiple recipients through the form,
         you should create multiple RequestItems."""
         self.setupUser(link_google=True)
         recipients = [self.generate_recipient(), self.generate_recipient()]

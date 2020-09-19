@@ -1,9 +1,6 @@
-import functools
-
 from allauth.socialaccount.models import SocialAccount, SocialToken, SocialApp
 from google.oauth2.credentials import Credentials
 import googleapiclient.discovery
-from django.http import HttpResponseForbidden
 from rest_framework import permissions
 
 

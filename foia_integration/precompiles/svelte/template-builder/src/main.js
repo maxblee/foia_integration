@@ -16,7 +16,6 @@ const app = new App({
       agencyMunicipality: 'Agency Municipality',
       agencyState: 'Agency State',
       agencyZip: 'Agency ZIP Code',
-      subject: 'Subject Line',
       foiaEmail: 'Agency Public Records Email Address',
     },
   },
