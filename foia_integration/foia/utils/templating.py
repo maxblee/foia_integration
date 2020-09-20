@@ -125,8 +125,9 @@ def generate_request_body(request):
 def form_email(request):
     email_body = generate_request_body(request)
     message = MIMEText(email_body)
+    pra_name = request.agency.state.public_records_act_name
     message["to"] = request.agency.pra_email
-    message["subject"] = request.request_info.subject_line
+    message["subject"] = f"{pra_name} Request: {request.request_info.subject_line}"
     message["from"] = request.user.email
     raw_message = {"raw": base64.urlsafe_b64encode(message.as_bytes()).decode()}
     return raw_message

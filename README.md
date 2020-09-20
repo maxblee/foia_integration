@@ -1,121 +1,95 @@
+# `foia_integration`
+
+This is a Django project designed to help journalists file and manage their public records requests. It's ported over from [`django_sourcebook`](https://github.com/maxblee/django_sourcebook), a hastily built tool that does much of the same thing. Eventually, once I finish building `foia_integration`, `django_sourcebook` will cease to exist.
+
+## Contents
+- [Motivation](#motivation)
+- [Setup](#setup)
+- [Features](#features)
+- [Roadmap](#roadmap)
+
+## Motivation
+
+There are a few projects built for helping journalists file a bunch of public records requests.
+
+One is [foiamail](https://github.com/bettergov/foiamail), which allows people to bulk file public records requests and generate status reports on agency responses using `cron`.
+
+Another is [Muckrock](https://www.muckrock.com/), which offers paid plans that allow journalists to file a limited number of public records requests with a friendly UI, paid support, and more.
+
+And there are others, like a [GMail sender from the Miami Herald](https://github.com/mcclatchy/gun-deaths) that are designed specifically for filing requests in a single project.
+
+`foia_integration` is meant to serve as a bridge between the single-project, programmatic tools like `foiamail` and the single-request, service-oriented tool in Muckrock.
+
+It is designed for general-purpose use and can handle single public records requests just as well as it can handle bulk-file requests. It currently offers a friendly interface for creating templates and for filing multiple requests at the same time. And eventually, I plan on expanding its functionality to make searching for and responding to requests easier.
+
+In addition, I plan on adding utilities to allow people to connect requests with contact logs, sourcebooks, and projects to make managing public records requests easier.
+
+The result is a project that is a bit less suited for large bulk records requests than `foiamail` and far less suited for requests directed at a single agency than a paid service like Muckrock. (In particular, `foiamail` is designed in a way that allows it to be effectively served from a cloud server like an EC2 running on `cron`.) In other words, you might be better off using one of those tools.
+
 ## Setup
 
-### Step One: Setting up PostgreSQL
+Full installation instructions are available in [the setup guide](https://www.github.com/maxblee/foia_integration/blob/master/SETUP.md).
 
-First, you need to set up a PostgreSQL database in order to use this Django app. The first step for this is installing PostgreSQL.
-I'm using PostgreSQL 12.2. 
-
-After you've installed PostgreSQL, you should set up a user for this tool. You can do this by typing:
+Once you have everything installed and you have the Google Developer Console configured, you can type
 
 ```sh
-$ sudo -u postgres createuser --interactive
+python manage.py runserver
 ```
 
-Note that if you want to develop on this system and run tests, you should allow your user to create databases. 
+to start the server and run your site. 
 
-And once you've created a user, you should create a new database:
+When you load the URL (127.0.0.1:8000 by default), you should see a login page. (**Note: Be sure to be at 127.0.0.1 and not localhost; Google's login does not recognize the two domains as being the same.**)
 
-```sh
-$ createdb <YOUR_DATABASE_NAME>
-```
+Click the login account and sign in with your Google Account.
 
-From here you can run
+## Features
 
-```sh
-$ sudo adduser <YOUR_DATABASE AND ROLE NAME>
-$ sudo -u <YOUR_DATABASE_AND_ROLE_NAME> psql
-```
+`foia_integration` is designed to be full of features designed to make it easier to manage records requests. Because it is still in its infancy, that list of features is fairly small.
 
-To log yourself into psql, and then you can run
+Right now, you can:
 
-```sh
-=> ALTER USER <YOUR_ROLE_NAME> WITH PASSWORD <YOUR_PASSWORD>;
-```
+### Build Templates
 
-You can read a full description of this setup [in DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-18-04).
+If you click on the link for creating a new template, you should see a simple form with a bunch of buttons. The form allows you to select a particular state that you want to build a template for. If you don't have any strong preference, I'd recommend going with "General," which will be used any time you haven't configured a state-specific template.
 
-Once you've set up PostgreSQL, you should save your database configuration in environment variables.
+Then, you can enter text in the large text input field. Any time you click one of the buttons on the form or type `{{` and then the text inside the button and `}}`, you can add general information about the request, like the number of days before the agency has to respond. The only requirement is that you enter a place to put the Requested Records. That's where the records you're asking for go.
 
-These are the default settings in the `settings.py` for the project:
+Anything outside of the items in those buttons will be written exactly as you typed them in every records request you send with that template. The things inside the buttons will all be computed based on information about the records you're requesting, the agency or recipient you're sending it to, or the state the agency is part of (including the federal government). For the most part, these should be straightforward. But there are a few quirks to keep in mind:
 
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': "foia_integration",
-        "USER": os.environ["POSTGRES_USER"],
-        "PASSWORD": os.environ["POSTGRES_PWD"],
-        "HOST": "localhost",
-        "PORT": os.environ.get("POSTGRES_PORT", "5432")
-    }
-}
-```
+- The listed Public Records Act Name does not include the word "the." So if you want to type something like "Pursuant to the Freedom of Information Act," You should write the word "the."
+- "Maximum Response Time" is, unlike everything else here, an entire sentence. Specifically, it says "I look forward to hearing from you" within x time. This is because some states don't have maximum response times specified in statute (although they are often still required to respond promptly). In addition, some states measure their days as business days only, while others measure them as calendar days. The tool will tell people "I look forward to hearing from you within X days" for states that use calendar days, and "I look forward to hearing from you within X business days" for other states.
 
-You can, of course, change those if you wish. If you don't, you must set environment
-variables for `POSTGRES_USER` and `POSTGRES_PWD`. You can do this in bash
-using
+## Filing and Saving Requests
 
-```sh
-# The actual file may be different depending on your OS and shell.
-# bashrc is used by default in Ubuntu
-$ echo "
-export POSTGRES_USER=<YOUR USERNAME>
-export POSTGRES_PWD=<YOUR PASSWORD>
-" >> ~/.bashrc
-# this just reloads your bashrc with these new environment variables
-$ source ~/.bashrc
-```
+After filling out a template, you can file and save requests. You get to the form by clicking on the "Send Public Records Requests" link on the home page.
 
-### Step Two: Setting up Google
-In order to run this app, you need to configure an app in Google's developer console.
+When you get to the form, you can submit information about the records you're requesting in the "Information about the Request" section. You can add information about the people you want the request sent to in the "Information about the Recipients" section.
 
-TODO
+There are a few ways to use this section. First, you can upload a csv file. This option requires fields to be specified in the following format:
 
-### Step Three: Setting up Django
+- recipientFirstName : The first name of the recipient
+- recipientLastName : The last name of the recipient
+- agencyName : The name of the agency
+- foiaEmail : The public records email address for the agency
+- agencyState : The state of the agency
+- agencyStreetAddress : The street address for the agency
+- agencyMunicipality : The city the agency is located in
+- agencyZip : The ZIP code of the agency
 
-Finally, you need to set up Django. The first requirement for doing this is simply
-installing all of the packages. Using `pipenv`, you can run
+Of these, only `foiaEmail`, `agencyState`, and `agencyName` are required.
 
-```sh
-$ pipenv install
-```
+Or you can add individual items. The bottom recipient always has an add icon allowing you to add more recipients. In addition, the app will offer auto-fill suggestions of existing contacts. If you click on any of those suggestions, it will fill out all of the data have on that recipient.
 
-to load all the dependencies.
+Keep in mind that any changes you make to that information except for the email address will not be saved. The application treats the agency's email address as a unique field, and it maintains the original spelling. 
 
-Next, you need to create a superuser and set up your database with some initial
-data.
+Alternatively, you can manually enter information. This will create new records.
 
-```sh
-$ cd foia_integration
-$ python manage.py migrate
-$ python manage.py loaddata
-$ python manage.py createsuperuser
-```
+Once you're done adding agencies, you can hit the Save Requests button to save your requests without sending them or the Send Requests button to send all of your requests. The application uses `apscheduler` to launch the requests in a separate process, so the form should submit quickly, regardless of how many agencies you've sent requests to.
 
-After following all of the prompts, you just have one more thing to do. First, you should start Django's server and go to the Admin page (http://127.0.0.1:8000/admin):
+## Roadmap
 
-```
-$ python manage.py runserver
-```
+Because this project is in its infancy, there are a number of features I'd like to add.
 
-From here, you need to log in using the superuser credentials you just created.
-
-Then, you need to go to the Site panel on the admin page and click on the green plus sign to add a new site. Now, configure the domain and the name with one of the URIs you authorized in the developer console. If you authorized Google to use multiple sites, you can use multiple sites.
-
-Then, you should go back to the admin page and add a "Social application." Click the choice for Google, add a name for it, and add your client ID and your secret key (which can be found in the developer console). Move over the site(s) you want to use to have them connected with your account.
-
-Now, if you log out of your admin account, visit http://127.0.0.1 and log in through Google, you should be able to fully use the site.
-
-### Step Four (Optional): Testing Setup
-
-If you want to get set up to run tests, there are a few additional small things you need to get set up. First, you should download the development dependencies:
-
-```sh
-$ pipenv install --dev
-```
-
-Next, you will need to download a copy of Geckodriver (the selenium Firefox browser) and install it in its default location.
-
-You should also set up a GMail account to run tests on. 
-
-Finally, you will need to configure a number of environment variables (primarily so we can test to make sure that the functions work against a real live testing GMail account.) I've used a dotenv file for saving these files that looks something like this:
+- Scheduling: I want to add support to allow people to schedule requests to be sent at certain times. For instance, you may want to schedule requests for FOIA logs at the end of every year. 
+- Groupings: I want to add support for people to create "Groups" of agencies they want to send requests to regularly. That would allow people to name the type of requests they're sending.
+- CRUD: Right now, I just have the "Create" part of the app build (and only some of that). I plan on adding search forms, along with options to delete and update data.

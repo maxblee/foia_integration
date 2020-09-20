@@ -16,7 +16,8 @@ from rest_framework.decorators import (
 )
 from rest_framework.response import Response
 
-from foia.models import PRATemplate, State, Entity, Source, RequestContent, RequestItem, scheduler, GMailContact
+from foia.scheduler import scheduler
+from foia.models import PRATemplate, State, Entity, Source, RequestContent, RequestItem, GMailContact
 from foia.utils import auth, common_queries, templating
 
 logger = logging.getLogger("foia_send")
@@ -216,13 +217,12 @@ def send_requests(request, req_type):
             }
         )
     if req_type == "send":
-        file_requests(request, request_info.requestitem_set.all())
-        # scheduler.add_job(file_requests, "date", args=[request, request_info.requestitem_set.all()])
+        scheduler.add_job(file_requests, "date", args=[request, request_info.requestitem_set.all()])
     return Response({"status": "ok",})
 
-def file_requests(request, pra_requests):
+def file_requests(user, pra_requests):
     """Sends the public records requests that you just saved."""
-    service, uid = auth.get_user_service(request)
+    service, uid = auth.get_user_service(user)
     for request_item in pra_requests:
         raw_message = templating.form_email(request_item)
         sent_message = (
@@ -237,7 +237,7 @@ def file_requests(request, pra_requests):
             request_item.request_sent = True
             request_item.save()
             GMailContact.objects.create(
-                user=request.user,
+                user=user,
                 contact_type=GMailContact.UserRole.USER_INITIATED,
                 contact_method=GMailContact.ContactMethod.EMAIL,
                 related_request=request_item,

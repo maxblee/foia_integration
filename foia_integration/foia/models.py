@@ -8,11 +8,6 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 import us
 
-scheduler = BackgroundScheduler()
-scheduler.add_jobstore(DjangoJobStore(), "default")
-register_events(scheduler)
-scheduler.start()
-print("Scheduler Started")
 # Create your models here.
 class State(models.Model):
     """Represents a state (or the federal government) for a FOIA request."""
@@ -68,7 +63,7 @@ class State(models.Model):
     def describe_response_time(self):
         num_days = self.maximum_response_time
         business_days = self.business_days
-        if num_days is None or business_days:
+        if num_days is None or business_days is None:
             response_time = ""
         elif business_days:
             response_time = f" within {num_days} business days"

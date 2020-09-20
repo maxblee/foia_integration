@@ -18,7 +18,7 @@ from foia.models import State, PRATemplate
 def app_index(request):
     """The index page"""
     extra_context = {}
-    gmail_service = auth.get_user_service(request)
+    gmail_service = auth.get_user_service(request.user)
     if request.user.is_authenticated:
         extra_context["num_overdue"] = "TODO"
     extra_context["has_google_service"] = gmail_service is not None

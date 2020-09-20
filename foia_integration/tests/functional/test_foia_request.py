@@ -14,7 +14,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from foia.models import Entity, Source, State, RequestItem, RequestContent
+from foia.models import Entity, Source, State, RequestItem, RequestContent, GMailContact
 from tests.functional.common import login_google
 from tests import shared
 
@@ -401,8 +401,3 @@ def test_save_submission_errors(selenium, live_server, base_db):
         assert form_error.find_element_by_xpath("ancestor::label").text.startswith(
             field
         )
-
-
-def test_can_submit_request(selenium, live_server, base_db):
-    """You should be able to actually submit the request."""
-    pytest.fail()

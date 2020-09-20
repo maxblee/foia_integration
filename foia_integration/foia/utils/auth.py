@@ -12,21 +12,21 @@ def user_has_gmail(user):
     return google_user.exists()
 
 
-def get_user_service(request):
+def get_user_service(user):
     """Gets a GMAIL Service object given.
 
     Args:
-        request: A request from the initial view (whatever that is)
+        user: The current user (or anonymoususer)
     Returns:
         None if the user was not authenticated or if the user was not a Google user.
     """
-    if not request.user.is_authenticated:
+    if not user.is_authenticated:
         return None
     google_api = SocialApp.objects.get(provider="google")
     client_id = google_api.client_id
     client_secret = google_api.secret
     # need to use filter to check if exists; if the user doesn't exist
-    user = SocialAccount.objects.filter(provider="google", user_id=request.user.id)
+    user = SocialAccount.objects.filter(provider="google", user_id=user.id)
     if not user.exists():
         return None
     # NOTE: I don't believe there are cases where the user would have multiple accounts with the same provider but idk for sure

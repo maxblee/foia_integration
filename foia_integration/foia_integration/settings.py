@@ -55,7 +55,7 @@ INSTALLED_APPS += [
 INSTALLED_APPS += ["corsheaders"]
 
 # apps
-INSTALLED_APPS += ["foia"]
+INSTALLED_APPS += ["foia.apps.FoiaConfig"]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -161,8 +161,6 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-CORS_ORIGIN_WHITELIST = ["http://localhost:5000"]
-
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
@@ -170,3 +168,15 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
     ]
 }
+
+
+# APScheduler settings
+SCHEDULER_CONFIG = {
+    "apscheduler.jobstores.default": {
+        "class": "django_apscheduler.jobstores:DjangoJobStore"
+    },
+    "apscheduler.executors.processpool": {
+        "type": "threadpool"
+    }
+}
+SCHEDULER_AUTOSTART = True
