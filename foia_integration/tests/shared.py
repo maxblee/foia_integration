@@ -1,5 +1,8 @@
+"""Shared utilities for use in unit tests and functional tests."""
+
+
 def generate_fake_foia_recipient(fake_gen):
-    """Generates a fake FOIA recipient (agency + name)"""
+    """Generates a fake FOIA recipient (agency + name)."""
     municipality = fake_gen.city()
     return {
         "recipientFirstName": fake_gen.first_name(),

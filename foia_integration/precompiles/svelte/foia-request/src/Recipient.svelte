@@ -12,11 +12,12 @@
   let templateJson
   $: currentRecipient = $recipients[idx]
   $: templateInfo = getTemplateInfo(currentRecipient, $request)
-  $: currentTemplate = templateJson === undefined ? "" : fillTemplate(templateInfo, templateJson)
+  $: currentTemplate =
+    templateJson === undefined ? '' : fillTemplate(templateInfo, templateJson)
   // tie this variable to the *value* of the state to avoid unnecessary XHR requests
   $: selectedState = currentRecipient.agencyState.value
   $: if (toggleDisplay) {
-    previewSubmission(selectedState || "US")
+    previewSubmission(selectedState || 'US')
   }
 
   function getTemplateInfo(recipientItem, requestItem) {
@@ -62,11 +63,8 @@
     templateJson = resp
   }
 
-  async function togglePreview(event) {
+  async function togglePreview() {
     toggleDisplay = !toggleDisplay
-    // if (toggleDisplay) {
-    //   previewSubmission(event)
-    // }
   }
 
   function addRecipient() {
@@ -144,7 +142,7 @@
     <RecipientField {idx} fieldKey="recipientLastName" />
   </div>
   <div class="agency__general">
-    <RecipientField {idx} fieldKey="agencyName" required={true}/>
+    <RecipientField {idx} fieldKey="agencyName" required={true} />
     <RecipientField
       {idx}
       fieldKey="foiaEmail"
@@ -167,7 +165,11 @@
   <div class="new__items">
     <div class="add__item">
       {#if idx === $count - 1}
-        <button type="button" id="add-{idx}" on:click={addRecipient} aria-label="Add Item">
+        <button
+          type="button"
+          id="add-{idx}"
+          on:click={addRecipient}
+          aria-label="Add Item">
           <svg
             role="img"
             width="25px"
@@ -204,12 +206,14 @@
   </div>
   <div class="expand__preview">
     {#if !toggleDisplay}
-      <button type="button" id="expand-{idx}" on:click={togglePreview}>Preview Request</button>
+      <button type="button" id="expand-{idx}" on:click={togglePreview}>Preview
+        Request</button>
       <div id="template-{idx}" class="template__preview hidden">
         {currentTemplate}
       </div>
     {:else}
-      <button type="button" id="expand-{idx}" on:click={togglePreview}>Hide Preview</button>
+      <button type="button" id="expand-{idx}" on:click={togglePreview}>Hide
+        Preview</button>
       <div id="template-{idx}" class="template__preview">{currentTemplate}</div>
     {/if}
   </div>

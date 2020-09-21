@@ -1,3 +1,4 @@
+"""Tests the FOIA request filing/saving page."""
 import functools
 import os
 import pathlib
@@ -14,7 +15,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from foia.models import Entity, Source, State, RequestItem, RequestContent, GMailContact
+from foia.models import Entity, Source, State, RequestItem, RequestContent
 from tests.functional.common import login_google
 from tests import shared
 
@@ -26,6 +27,7 @@ TMP_PATH = pathlib.Path(".")
 
 @pytest.fixture
 def mock_successful_file_upload():
+    """Mocks a successful upload on the CSV portion of the page."""
     header = (
         "agencyMunicipality",
         "agencyZip",
@@ -51,6 +53,7 @@ def mock_successful_file_upload():
 
 @pytest.fixture
 def copy_mock_file(mock_successful_file_upload):
+    """Creates a second mock upload file."""
     new_file = os.path.abspath(TMP_PATH / "tmp2.csv")
     shutil.copyfile(mock_successful_file_upload, new_file)
     yield new_file
@@ -59,6 +62,7 @@ def copy_mock_file(mock_successful_file_upload):
 
 @pytest.fixture
 def mock_wrong_field():
+    """Mocks a CSV file with bad data."""
     header = ("agencyMunicipality", "nonsense")
     data_choices = ("{{city}}", "{{email}}")
     csv_contents = fake.csv(header=header, data_columns=data_choices, num_rows=15)
@@ -73,6 +77,13 @@ def mock_template(
     state="generic",
     message="Dear {{Recipient Name}}:\nI hereby request the following records:\n{{Requested Records}}",
 ):
+    """Creates a mock template using the template builder.
+
+    Args:
+        browser: A selenium browser
+        state: The 2-digit abbreviation (or generic) representing the template,
+        message: The public records template text.
+    """
     state_xpath = f"//*[@id='state-selection']//option[@value='{state}']"
     browser.find_element_by_xpath(state_xpath).click()
     browser.find_element_by_id("template-input").send_keys(message)
@@ -80,7 +91,12 @@ def mock_template(
 
 
 def add_template_info(browser, url):
-    """Uploads a template for the user."""
+    """Uploads a template for the user using '/template-builder'.
+
+    Args:
+        browser: a selenium driver
+        url: The live_server url.
+    """
     browser.get(urljoin(url, request_form))
     login_google(browser, go_home=False)
     WebDriverWait(browser, 10).until(
@@ -90,10 +106,12 @@ def add_template_info(browser, url):
 
 
 def generate_fake_agency_info(fake_gen, idx):
-    """Generates fake information about an agency
-    given a faker Faker object and an index (the idx of the recipient)
-    """
+    """Generates fake information about an agency.
 
+    Args:
+        fake_gen: a faker.Faker object, for creating the fake information
+        idx: the index where the information should go.
+    """
     # first instantiate the dictionary without the id field exactly right
     # then change
     missing_idx = shared.generate_fake_foia_recipient(fake_gen)
@@ -101,19 +119,30 @@ def generate_fake_agency_info(fake_gen, idx):
 
 
 def send_agency_info(browser, agency_data):
+    """Adds information about the agency onto the page.
+
+    Args:
+        browser: A selenium driver
+        agency_data: The data produced e.g. by `generate_fake_agency_info`.
+    """
     for field, value in agency_data.items():
         browser.find_element_by_id(field).send_keys(value)
 
 
 def check_agency_info(browser, expected_data):
+    """Asserts that all of the expected data is in the browser.
+
+    Args:
+        browser: A selenium browser
+        expected_data: A dictionary mapping the id attribute to its value.
+    """
     for field, value in expected_data.items():
         input_item = browser.find_element_by_id(field)
         assert input_item.get_attribute("value") == value
 
 
 def test_redirected_if_no_template(selenium, live_server, base_db):
-    """If a user is logged in but hasn't uploaded a template,
-    they should be redirected so they can properly submit the form."""
+    """People trying to submit the form should be redirected to the template-builder page."""
     selenium.get(urljoin(live_server.url, request_form))
     login_google(selenium, go_home=False)
     # without wait, gets caught up before url gets to template page
@@ -139,11 +168,7 @@ def test_redirected_if_no_template(selenium, live_server, base_db):
 def test_successful_file_upload(
     selenium, live_server, base_db, mock_successful_file_upload
 ):
-    """You should be able to add recipients by uploading a file,
-    assuming you've entered appropriate fields.
-
-    This simply tests that you can upload a file
-    """
+    """Tests that users can add a CSV and add fields in the request form."""
     add_template_info(selenium, live_server.url)
     csv_input = WebDriverWait(selenium, 10).until(
         EC.presence_of_element_located((By.ID, "csv_upload"))
@@ -166,7 +191,9 @@ def test_unsuccessful_file_upload(selenium, live_server, base_db, mock_wrong_fie
 def test_csv_upload_field_maintenance(
     selenium, live_server, base_db, mock_successful_file_upload, copy_mock_file
 ):
-    """Users should expect the following things when they upload a csv:
+    """Tests the stability of the CSV upload.
+
+    Users should expect the following things when they upload a csv:
 
     It should not remove their existing data
     They should be able to add more data afterward
@@ -262,6 +289,7 @@ def test_add_and_delete_buttons(
 
 def test_can_view_preview(selenium, live_server, base_db):
     """Tests to make sure you can view the preview for a specific state.
+
     Additionally makes sure that when you add information, the preview updates.
     """
     add_template_info(selenium, live_server.url)
@@ -290,9 +318,12 @@ def test_can_view_preview(selenium, live_server, base_db):
 def test_preview_button_shows_different_results_by_state(
     selenium, live_server, base_db
 ):
-    """This makes sure the button previewing the requests
+    """The preview button should show a different request based on the state.
+
+    This makes sure the button previewing the requests
     shows different previews for different states (e.g. different public
-    records law names)"""
+    records law names).
+    """
     add_template_info(selenium, live_server.url)
     selenium.get(urljoin(live_server.url, reverse("template")))
     mock_template(
@@ -319,8 +350,7 @@ def test_preview_button_shows_different_results_by_state(
 
 @pytest.mark.django_db
 def test_can_autocomplete_agencies(selenium, live_server, base_db, django_user_model):
-    """If you've added agencies and sources into your database,
-    you should be able to add them using autocomplete."""
+    """Makes sure the agency autocomplete functionality works."""
     add_template_info(selenium, live_server.url)
     agency_info = generate_fake_agency_info(fake, 0)
     agency_name = agency_info["id_agencyName-0"]
@@ -347,6 +377,7 @@ def test_can_autocomplete_agencies(selenium, live_server, base_db, django_user_m
     time.sleep(1)
     # just send the first letter of the name; should be enough
     name_elem.send_keys(agency_name[:1])
+    time.sleep(1)
     name_elem.send_keys(Keys.DOWN)
     name_elem.send_keys(Keys.ENTER)
     missing_recipient = {k: v for k, v in agency_info.items() if "recipient" not in k}
@@ -360,8 +391,7 @@ def test_can_autocomplete_agencies(selenium, live_server, base_db, django_user_m
 
 
 def test_can_save_request(selenium, live_server, base_db, django_user_model):
-    """After filling out a form, you should be able to save a
-    record of it (without sending the requests)."""
+    """After filling out a form, you should be able to save a record of it (without sending the requests)."""
     add_template_info(selenium, live_server.url)
     agency_info = generate_fake_agency_info(fake, 0)
     time.sleep(1)
@@ -379,9 +409,7 @@ def test_can_save_request(selenium, live_server, base_db, django_user_model):
 
 
 def test_save_submission_errors(selenium, live_server, base_db):
-    """If you try submitting the form but have an error (e.g. a missing required field)
-    you should not be able to submit the form, but you should also get
-    to keep your data."""
+    """Tests errors in saving the request."""
     add_template_info(selenium, live_server.url)
     # have to have explicit timer because god forbid selenium's wait functions actually work
     time.sleep(1)

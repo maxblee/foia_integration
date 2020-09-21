@@ -1,5 +1,5 @@
-from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore, register_events
+"""Database models for `foia_integration`."""
+
 from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
@@ -46,7 +46,7 @@ class State(models.Model):
 
     @property
     def info(self):
-        """Gets basic information for the state/federal government."""
+        """Gets basic information for the state/federal government, using `us` package."""
         if self.abbr == "US":
             return us.unitedstatesofamerica
         return us.states.lookup(self.abbr)
@@ -54,13 +54,25 @@ class State(models.Model):
     def state_lookup(self, lookup_field):
         """Looks up information about a state.
 
-        Allows for easy configuration between a state and the federal government."""
+        A thin wrapper around `us.states.lookup`.
+
+        Args:
+            lookup_field: A string lookup field, as used by `us.states`.
+        """
         if hasattr(self.info, lookup_field):
             return getattr(self.info, lookup_field)
         return None
 
     @property
     def describe_response_time(self):
+        """A human-readable description of `maximum_response_time`.
+
+        Returns:
+            "I look forward to hearing from you." for states with no maximum response time,
+            "I look forward to hearing from you within X days." for states that have maximum
+            response times that use calendar days (e.g. California), and
+            "I look forward to hearing from you within X business days." for other states.
+        """
         num_days = self.maximum_response_time
         business_days = self.business_days
         if num_days is None or business_days is None:
@@ -73,8 +85,7 @@ class State(models.Model):
 
     @property
     def foia_guide(self):
-        """Returns the Reporter's Committe for the Freedom of the Press
-        Open Government Guide for the state or federal government."""
+        """Returns the URL for RCFP's guides for state and federal government records requests."""
         state_cleaned = "-".join(self.info.name.lower().split())
         if self.state_lookup("is_territory"):
             return None
@@ -91,6 +102,8 @@ class State(models.Model):
 
 
 class PRATemplate(models.Model):
+    """Represents a template for filing records requests."""
+
     template_user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE
     )
@@ -106,6 +119,8 @@ class PRATemplate(models.Model):
 
 
 class Entity(models.Model):
+    """Represents an entity (typically, an agency, for public records requests)."""
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     # Require a unique constraint because we have to look up from a select/datalist
     # and we want to know we're filing the right thing.
@@ -141,6 +156,8 @@ class Entity(models.Model):
 
 
 class Source(models.Model):
+    """Represents a source (e.g. a recipient of a public records requests)."""
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -152,10 +169,12 @@ class Source(models.Model):
 
     @property
     def full_name(self):
+        """Returns the full name of a person, given their first and last names."""
         return f"{self.first_name} {self.last_name}"
 
     @cached_property
     def unique_representation(self):
+        """Returns a unique representation of a person for use e.g. in a detail URL."""
         first_lower = "-".join(self.first_name.lower().split())
         last_lower = "-".join(self.last_name.lower().split())
         name_matches = Source.objects.filter(
@@ -171,9 +190,7 @@ class Source(models.Model):
 
 
 class RequestContent(models.Model):
-    """A class for representing the core
-    content of a PRA request.
-    """
+    """Represents the content common among all requests in a bulk-filed request."""
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     subject_line = models.CharField(max_length=80)
@@ -194,7 +211,7 @@ class RequestContent(models.Model):
 
 
 class RequestItem(models.Model):
-    """Represents a single FOIA request"""
+    """Represents a single FOIA request."""
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     request_info = models.ForeignKey(RequestContent, on_delete=models.CASCADE)
@@ -210,20 +227,22 @@ class RequestItem(models.Model):
 
     @cached_property
     def readable_name(self):
+        """Returns a human-readable name to describe the request."""
         return f"{self.request_info.subject_line}: {self.agency.name}"
 
     def __str__(self):
         return self.readable_name
 
+
 class Contact(models.Model):
     """Represents an attempted or actual contact.
 
-    An abstract model for emails, phone calls,
-    and in-person visits."""
+    An abstract model for emails, phone calls, and in-person visits.
+    """
 
     class UserRole(models.TextChoices):
-        """Represents the role a user took
-        (e.g. initiated, followed-up, received)"""
+        """Represents the role a user took (e.g. initiated, followed-up, received)."""
+
         USER_INITIATED = "i", _("Initiated Contact")
         USER_FOLLOW_UP = "f", _("Followed Up")
         USER_RESPONSE = "r", _("Responded to Contact")
@@ -233,6 +252,8 @@ class Contact(models.Model):
         RECIPIENT_FOLLOW_UP = "rf", _("Source followed up")
 
     class ContactMethod(models.TextChoices):
+        """Represents the contact method a person used."""
+
         EMAIL = "r", _("E-mail")
         PHONE = "p", _("Phone")
         MESSAGING = "m", _("Messaging system (not email)")
@@ -243,13 +264,16 @@ class Contact(models.Model):
     contact_method = models.CharField(max_length=1, choices=ContactMethod.choices)
     responding_to = models.ForeignKey("self", on_delete=models.SET_NULL, null=True)
     contact_date = models.DateTimeField(default=timezone.now)
-    related_request = models.ForeignKey(RequestItem, null=True, on_delete=models.SET_NULL)
+    related_request = models.ForeignKey(
+        RequestItem, null=True, on_delete=models.SET_NULL
+    )
     notes = models.TextField(null=True, blank=True)
 
     class Meta:
         abstract = True
 
+
 class GMailContact(Contact):
+    """Specifically represents a GMail contact (sent by email through the GMail API)."""
 
     thread_id = models.CharField(max_length=64)
-

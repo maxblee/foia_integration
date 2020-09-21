@@ -1,7 +1,14 @@
 <script>
-  import Cookies from "js-cookie"
-  import * as Papa from "papaparse"
-  import { recipients, count, start, sources, request, errors } from './store.js'
+  import Cookies from 'js-cookie'
+  import * as Papa from 'papaparse'
+  import {
+    recipients,
+    count,
+    start,
+    sources,
+    request,
+    errors,
+  } from './store.js'
   import Recipient from './Recipient.svelte'
   import Request from './Request.svelte'
 
@@ -13,14 +20,13 @@
     })
 
   let uploadData
-  const csrfToken = Cookies.get("csrftoken")
+  const csrfToken = Cookies.get('csrftoken')
 
   async function handleUpload(event) {
     let file = event.target.files[0]
     let idx = $recipients.length - 1
     // from https://stackoverflow.com/questions/56427009/how-to-return-papa-parsed-csv-via-promise-async-await
     const res = new Promise((resolve, reject) => {
-
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
@@ -30,7 +36,11 @@
               Object.keys(start).includes(d)
             )
           ) {
-            if (!Object.entries($recipients[idx]).every((d) => d[1].value === start[d[0]].value)) {
+            if (
+              !Object.entries($recipients[idx]).every(
+                (d) => d[1].value === start[d[0]].value
+              )
+            ) {
               idx += 1
               recipients.addItem()
               sources.addItem()
@@ -55,34 +65,41 @@
   }
 
   async function handleFormSubmission(e) {
-    const postUrl = `/api/current-user/foia/${e.submitter.name}`;
+    const postUrl = `/api/current-user/foia/${e.submitter.name}`
     const readableEntry = (content) => {
       const output = {}
-      Object.entries(content)
-        .forEach((d) => {output[d[0]] = d[1].value})
+      Object.entries(content).forEach((d) => {
+        output[d[0]] = d[1].value
+      })
       return output
     }
     await fetch(postUrl, {
-      method: "POST",
-      mode: "same-origin",
+      method: 'POST',
+      mode: 'same-origin',
       headers: {
-        "X-CSRFToken": csrfToken,
-        "Content-Type": "application/json"
+        'X-CSRFToken': csrfToken,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         requestContent: readableEntry($request),
         recipientContent: $recipients.map((d) => readableEntry(d)),
-        numItems: $count
-      })
-    }).then((response) => response.json())
-    .then((results) => {
-      if (results.status === "error") {
-        errors.changeAll({requestErrors: results.requestErrors, recipientErrors: results.recipientErrors})
-      } else {
-        e.target.submit()
-      }
+        numItems: $count,
+      }),
     })
-    .catch((err) => {console.error(err);})
+      .then((response) => response.json())
+      .then((results) => {
+        if (results.status === 'error') {
+          errors.changeAll({
+            requestErrors: results.requestErrors,
+            recipientErrors: results.recipientErrors,
+          })
+        } else {
+          e.target.submit()
+        }
+      })
+      .catch((err) => {
+        console.error(err)
+      })
   }
 </script>
 
@@ -131,7 +148,7 @@
     justify-content: space-around;
     margin-bottom: 1.4rem;
   }
-  
+
   .submit__item {
     padding: 5px;
   }
@@ -142,7 +159,7 @@
 </style>
 
 <form method="POST" action="/" on:submit|preventDefault={handleFormSubmission}>
-  <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken}>
+  <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken} />
   <div class="form__container">
     <div class="section__container">
       <h2>Information about the Request</h2>
@@ -159,39 +176,39 @@
           accept=".csv"
           on:change={handleUpload} />
         <div class="upload__info">
-        {#if uploadData !== undefined}
-          {#await uploadData}
-            <p>Loading</p>
-          {:then result}
-            <p>Finished</p>
-          {:catch error}
-            <p>
-              Could not process file. Make sure it is a .csv file with the
-              correct fields.
-            </p>
-          {/await}
-        {/if}
+          {#if uploadData !== undefined}
+            {#await uploadData}
+              <p>Loading</p>
+            {:then result}
+              <p>Finished</p>
+            {:catch error}
+              <p>
+                Could not process file. Make sure it is a .csv file with the
+                correct fields.
+              </p>
+            {/await}
+          {/if}
+        </div>
+      </div>
+      {#each $recipients as _recipient, idx}
+        <Recipient {states} {idx} />
+      {/each}
+    </div>
+    <div class="submit__container">
+      <div class="submit__item">
+        <input
+          type="submit"
+          name="send"
+          id="id_send-requests"
+          value="Send Requests" />
+      </div>
+      <div class="submit__item">
+        <input
+          type="submit"
+          name="save"
+          id="id_save-requests"
+          value="Save Requests" />
       </div>
     </div>
-    {#each $recipients as _recipient, idx}
-      <Recipient {states} {idx} />
-    {/each}
   </div>
-  <div class="submit__container">
-    <div class="submit__item">
-      <input
-        type="submit"
-        name="send"
-        id="id_send-requests"
-        value="Send Requests" />
-    </div>
-    <div class="submit__item">
-      <input
-        type="submit"
-        name="save"
-        id="id_save-requests"
-        value="Save Requests" />
-    </div>
-  </div>
-</div>
 </form>

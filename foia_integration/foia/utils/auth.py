@@ -1,3 +1,8 @@
+"""Deals with authentication for foia_integration.
+
+Primarily, this involves GMail's authentication system.
+"""
+
 from allauth.socialaccount.models import SocialAccount, SocialToken, SocialApp
 from google.oauth2.credentials import Credentials
 import googleapiclient.discovery
@@ -5,7 +10,15 @@ from rest_framework import permissions
 
 
 def user_has_gmail(user):
-    """Tests whether a user has an attached GMail account."""
+    """Tests whether a user has an attached GMail account.
+
+    Args:
+        user: The user (or anonymous user) being tested for authentication.
+
+    Returns:
+        True if the user is authenticated and has an asssociated
+        email account, False otherwise.
+    """
     if not user.is_authenticated:
         return False
     google_user = SocialAccount.objects.filter(provider="google", user=user)
@@ -17,6 +30,7 @@ def get_user_service(user):
 
     Args:
         user: The current user (or anonymoususer)
+
     Returns:
         None if the user was not authenticated or if the user was not a Google user.
     """
@@ -56,11 +70,12 @@ def get_user_service(user):
 
 
 class GooglePermission(permissions.BasePermission):
-    """
-    Permission check to make sure user is authenticated and
-    has an associated Google account. (Required for views
-    and post and get methods that use Google's API.
+    """Permission check for GMail with rest_framework.
+
+    This is just a thin wrapper over `user_has_gmail` for
+    use in Django Rest Framework APIs.
     """
 
     def has_permission(self, request, view):
+        """Checks if user has GMail permissions."""
         return user_has_gmail(request.user)

@@ -1,3 +1,4 @@
+"""API views for the foia app."""
 import collections
 import logging
 import time
@@ -17,7 +18,14 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 
 from foia.scheduler import scheduler
-from foia.models import PRATemplate, State, Entity, Source, RequestContent, RequestItem, GMailContact
+from foia.models import (
+    State,
+    Entity,
+    Source,
+    RequestContent,
+    RequestItem,
+    GMailContact,
+)
 from foia.utils import auth, common_queries, templating
 
 logger = logging.getLogger("foia_send")
@@ -43,8 +51,9 @@ def get_states(request):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_template(request, state_abbr):
-    """Gets the user's most recent template from a requested state
-    or, if that is unavailable, the user's most recent generic template.
+    """Retrieves a template for a given user, based on the state.
+
+    See `foia.utils.templating for details.
     """
     expected_state = State.objects.filter(abbr=state_abbr)
     if not expected_state.exists():
@@ -59,9 +68,9 @@ def get_template(request, state_abbr):
     template = templating.get_template_from_state(request.user, expected_state)
     if template is None:
         return Response(
-                {"status": 404, "message": "Could not find template"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            {"status": 404, "message": "Could not find template"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
     json_template = template.template
     json_template["maxRespTime"] = expected_state.describe_response_time
     json_template["praName"] = expected_state.public_records_act_name
@@ -71,18 +80,38 @@ def get_template(request, state_abbr):
 
 
 # Entity autocomplete API
-def find_valid_entities(request):
+def find_valid_entities(user):
+    """This filters potential entities for the agency autofill in the tool for filing requests.
+
+    Specifically, it eliminates all entities that are not affiliated with
+    a state (including the federal government), that are not entities, or that
+    are unaffiliated with a public records email address.
+
+    Args:
+        user: a Django user instance
+
+    Returns:
+        A QuerySet of entities
+    """
     # prefetch state objects for performance later
     return (
         Entity.objects.select_related("state")
-        .filter(user=request.user, is_agency=True)
+        .filter(user=user, is_agency=True)
         .exclude(pra_email__isnull=True)
         .exclude(pra_email__exact="")
+        .exclude(state__isnull=True)
     )
 
 
 def agencies_from_results(filtered_agencies, **kwargs):
-    """Returns a list of matching agencies, plus additional values."""
+    """Returns a list of matching agencies, plus additional values.
+
+    Args:
+        filtered_agencies: A QuerySet of Entity objects representing public agencies
+        matching a query.
+        **kwargs: Additional key, value pairs added to a JSON dictionary object.
+
+    """
     value_results = filtered_agencies.values(
         "name", "street_address", "municipality", "state__abbr", "zip_code", "pra_email"
     )
@@ -106,20 +135,43 @@ def agencies_from_results(filtered_agencies, **kwargs):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def agency_by_name(request):
-    """Finds a list of agencies by the starting characters of
-    a name."""
+    """Autocomplete agency API view.
+
+    Args:
+        request: A Django request. Should have 'q' query parameter for
+        for the first characters of a field and a 'field' parameter
+        associated with the entity (see `foia.utils.templating.ENTITY_MAPPING`)
+
+    Returns:
+        A JSON response in format
+        {
+            queryField: the field of the query (e.g. agencyName),
+            query: the query sent to the API,
+            numResults: the number of matching results,
+            results: [
+                {
+                    agency_results
+                }
+            ]
+        }
+        in the case of success, where agency_results represents
+        all of the information associated with an agency from `templating.ENTITY_MAPPING` with
+        the exception of the state; or
+
+        A JSON response in format
+        {
+            "status": "status code",
+            "message": "error message"
+        }
+        in case of missing parameters or nonexistent field.
+    """
     params = request.query_params
-    field_mapping = {
-        "agencyName": "name",
-        "foiaEmail": "pra_email",
-        "agencyStreetAddress": "street_address",
-        "agencyZip": "zip_code",
-        "agencyMunicipality": "municipality",
-    }
+    # all fields minus state are acceptable
+    field_mapping = {k: v for k, v in templating.ENTITY_MAPPING.items() if v != "state"}
     if "q" in params and "field" in params and params["field"] in field_mapping:
         lookup = f"{field_mapping[params['field']]}__istartswith"
         query = {lookup: params["q"]}
-        valid_agencies = find_valid_entities(request).filter(**query)
+        valid_agencies = find_valid_entities(request.user).filter(**query)
         results = agencies_from_results(
             valid_agencies,
             queryField=templating.TEMPLATE_TO_DESC[params["field"]],
@@ -183,6 +235,14 @@ def sources_by_agency(request):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([auth.GooglePermission])
 def send_requests(request, req_type):
+    """A post request that saves `foia.models.RequestItem` values.
+
+    This is the form action used in the Send Records Requests page.
+
+    Args:
+        request: The request for the API view.
+        req_type: The type of request (save to save records, send to send them, schedule to schedule them)
+    """
     data = request.data
     if not _foia_request_is_valid_format(data):
         return Response(
@@ -217,19 +277,27 @@ def send_requests(request, req_type):
             }
         )
     if req_type == "send":
-        scheduler.add_job(file_requests, "date", args=[request, request_info.requestitem_set.all()])
+        scheduler.add_job(
+            file_requests, "date", args=[request, request_info.requestitem_set.all()]
+        )
     return Response({"status": "ok",})
 
+
 def file_requests(user, pra_requests):
-    """Sends the public records requests that you just saved."""
+    """Sends the public records requests that you just saved.
+
+    Designed for `apscheduler` to send, potentially at prescheduled
+    times.
+
+    Args:
+        user: Django user
+        pra_requests: A QuerySet of `RequestItem` objects.
+    """
     service, uid = auth.get_user_service(user)
     for request_item in pra_requests:
         raw_message = templating.form_email(request_item)
         sent_message = (
-            service.users()
-            .messages()
-            .send(userId=uid, body=raw_message)
-            .execute()
+            service.users().messages().send(userId=uid, body=raw_message).execute()
         )
         if "error" in sent_message:
             logger.error(f"{timezone.now()}\n{sent_message}\n\n")
@@ -241,12 +309,25 @@ def file_requests(user, pra_requests):
                 contact_type=GMailContact.UserRole.USER_INITIATED,
                 contact_method=GMailContact.ContactMethod.EMAIL,
                 related_request=request_item,
-                thread_id=sent_message["threadId"]
+                thread_id=sent_message["threadId"],
             )
             # reduce likelihood of rate limiting
             time.sleep(0.5)
 
+
 def _foia_request_is_valid_format(data):
+    """This validates the POST request used for the FOIA request submission.
+
+    Specifically, this validates that the post request data consists
+    of the right keys and types.`_request_is_valid` validates that the
+    request itself can be saved.
+
+    Args:
+        data: The data passed to the FOIA request through a POST method.
+
+    Returns:
+        True if valid, False otherwise
+    """
     recipient_mapping = set(templating.SOURCE_MAPPING.keys()) | set(
         templating.ENTITY_MAPPING.keys()
     )
@@ -287,6 +368,17 @@ def _foia_request_is_valid_format(data):
 
 
 def _save_requests(request_content, agencies, sources, user):
+    """Saves the public records requests.
+
+    Args:
+        request_content: `RequestContent` object (from `foia.models`)
+        agencies: A list of `entity_item` objects (a concatenation of
+        an `Entity` from `foia.models` and a boolean indicating whether it
+        was newly created)
+        sources: A list of sources. The sources can be None (if you aren't
+        addressing the request to a specific person) or an `entity_item` object
+        user: The Django user object
+    """
     request_content.save()
     for agency, source in zip(agencies, sources):
         if agency.newly_created:
@@ -309,8 +401,15 @@ def _save_requests(request_content, agencies, sources, user):
 
 
 def _request_is_valid(recipient_errors, request_errors):
-    """Determines whether form items were properly submitted
-    for the request form."""
+    """Validates the FOIA request.
+
+    Args:
+        recipient_errors: A list of potential dictionaries of errors for recipients.
+        request_errors: A dictionary of potential errors for the overal request.
+
+    Returns:
+        True if there are no errors, False otherwise
+    """
     # first check to see if any of the recipient data is invalid
     if not all([recipient == {} for recipient in recipient_errors]):
         return False
@@ -318,7 +417,17 @@ def _request_is_valid(recipient_errors, request_errors):
 
 
 def _get_request_content(request_info, user):
-    """Generate a request model for the user."""
+    """Generate a request model for the user.
+
+    Args:
+        request_info: A dictionary mapping values from `templating.REQUEST_MAPPING`
+        to their data.
+
+    Returns:
+        A tuple of Optional[RequestContent], errors, where the RequestContent
+        is None if there is an error and where errors is a dictionary mapping
+        errors to fields.
+    """
     request_fields = {
         val: request_info[key] for key, val in templating.REQUEST_MAPPING.items()
     }
@@ -333,6 +442,17 @@ def _get_request_content(request_info, user):
 
 
 def _get_recipients(recipient_info, num_items, user):
+    """Returns a tuple of entities, sources, and errors for a list of recipients.
+
+    Args:
+        recipient_info: A list of recipients, passed from the FOIA request
+        POST method.
+        num_items: The total number of recipients, passed from the original POST method.
+        user: A Django user object.
+
+    Returns:
+        A tuple of a list of entities, a list of sources, and a list of errors.
+    """
     entities = []
     sources = []
     errors = []
@@ -363,8 +483,7 @@ def _get_recipients(recipient_info, num_items, user):
 
 
 def _get_agency_from_dict(agency_dict):
-    """Returns an Optional[get_entity] object based on the value of
-    the agency."""
+    """Returns an Optional[entity_item] object based on the value of the agency."""
     agency_errors = {}
     # Entity doesn't require pra_email field but it's needed to send emails obv
     if agency_dict["pra_email"] == "":
@@ -386,9 +505,17 @@ def _get_agency_from_dict(agency_dict):
 
 
 def _get_source_from_info(first_name, last_name, rel_entity, user):
-    """Takes a dictionary of first and last name and a
-    related entity object (from _get_entity_from_dict)
-    and returns a source entity_item or None."""
+    """Gets information about a source and any errors.
+
+    Args:
+        first_name: The first name of the source.
+        last_name: The last name of the source.
+        rel_entity: The related entity (Optional[entity_item])
+        user: Django user instance.
+
+    Returns:
+        A tuple of a source entity_item and an error dictionary.
+    """
     source_errors = {}
     if first_name == "" and last_name == "":
         sel_source = None

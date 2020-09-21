@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foia', '0013_auto_20200919_0529'),
+        ("foia", "0013_auto_20200919_0529"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='requestitem',
-            name='request_sent',
+            model_name="requestitem",
+            name="request_sent",
             field=models.BooleanField(default=False),
         ),
     ]

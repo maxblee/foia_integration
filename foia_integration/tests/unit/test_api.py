@@ -1,3 +1,4 @@
+"""Unit tests of the API."""
 import json
 import os
 
@@ -34,6 +35,7 @@ class FoiaAPITestCase(APITestCase):
         self.fake = Faker()
 
     def setUp(self):
+        """Creates a SocialApp application linking to Google."""
         SocialApp.objects.create(
             provider="google",
             name="Google API",
@@ -42,6 +44,11 @@ class FoiaAPITestCase(APITestCase):
         )
 
     def setupUser(self, link_google=False):
+        """Sets up a user, optionally logging them into a fake Google account.
+
+        Args:
+            link_google: True if you want to link the user to a Google account.
+        """
         username = "sample_user"
         self.user = User.objects.create(username=username, email="example@example.com")
         pwd = "test_password"
@@ -52,12 +59,14 @@ class FoiaAPITestCase(APITestCase):
         self.client.login(username=username, password=pwd)
 
     def setupGoogle(self):
+        """Sets up a Google account for a user."""
         if not hasattr(self, "user"):
             self.setupUser(link_google=True)
         SocialAccount.objects.create(provider="google", user=self.user, uid="fake_id")
 
 
 def create_template(user, state=None):
+    """Creates a public records request template."""
     template = {
         "boilerplate": "I want ",
         "template": [
@@ -74,26 +83,28 @@ class TemplateTestCase(FoiaAPITestCase):
     """Tests the API calls related to filing a FOIA request."""
 
     def create_template(self, state=None):
+        """A thin wrapper over `create_template`."""
         return create_template(self.user, state=state)
 
     def test_forbidden_if_not_logged_in(self):
+        """Makes sure that people who are not logged in can't access template-based APIs."""
         response = self.client.get("/api/current-user/template/AK")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_unk_state_produces_404(self):
-        """Test that passing in a state abbreviation that doesn't
-        exist produces a 404 error.
-        """
+        """Test that passing in a state abbreviation that doesn't exist produces a 404 error."""
         self.setupUser()
         response = self.client.get("/api/current-user/template/ZZ")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_known_no_template_produces_404(self):
+        """Tests that you get a 404 error if you haven't passed in a template."""
         self.setupUser()
         response = self.client.get("/api/current-user/template/AZ")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_generic_template_passes(self):
+        """Creating a generic template should allow users to retrieve templates for state requests."""
         self.setupUser()
         generic_template = self.create_template()
         response = self.client.get("/api/current-user/template/VA")
@@ -110,6 +121,7 @@ class TemplateTestCase(FoiaAPITestCase):
         assert json.loads(response.content) == expected_result
 
     def test_state_template_passes(self):
+        """Tests the state template."""
         self.setupUser()
         state_template = self.create_template(state="CA")
         response = self.client.get("/api/current-user/template/CA")
@@ -126,7 +138,10 @@ class TemplateTestCase(FoiaAPITestCase):
 
 
 class AgencyTestCase(FoiaAPITestCase):
+    """Tests the agency autocomplete API."""
+
     def add_agencies(self):
+        """Adds 20 fake agencies to the test client database."""
         self.setupUser()
         for _ in range(20):
             municipality = self.fake.city()
@@ -134,6 +149,7 @@ class AgencyTestCase(FoiaAPITestCase):
             street_address = self.fake.street_address()
             zip_code = self.fake.postcode()
             pra_email = self.fake.email()
+            state = self.fake.random_element(State.objects.all())
             if not Entity.objects.filter(
                 Q(name=name) | Q(pra_email=pra_email)
             ).exists():
@@ -144,13 +160,16 @@ class AgencyTestCase(FoiaAPITestCase):
                     street_address=street_address,
                     zip_code=zip_code,
                     pra_email=pra_email,
+                    state=state,
                 )
 
     def test_login_required(self):
+        """Makes sure login is required for autocomplete API."""
         response = self.client.get("/api/current-user/autocomplete/agencies")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_noquery_fails(self):
+        """Makes sure you have to pass data to the autocomplete agency API."""
         self.add_agencies()
         response = self.client.get(
             "/api/current-user/autocomplete/agencies", {"field": "agencyName"}
@@ -158,6 +177,7 @@ class AgencyTestCase(FoiaAPITestCase):
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_no_agency_fails(self):
+        """Makes sure you need to pass an agency parameter to autocomplete API."""
         self.add_agencies()
         response = self.client.get(
             "/api/current-user/autocomplete/agencies", {"q": "city"}
@@ -165,6 +185,7 @@ class AgencyTestCase(FoiaAPITestCase):
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_wrong_agency_field_fails(self):
+        """Makes sure you have to pass an existing field into the autocomplete API."""
         self.add_agencies()
         response = self.client.get(
             "/api/current-user/autocomplete/agencies",
@@ -173,20 +194,19 @@ class AgencyTestCase(FoiaAPITestCase):
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_agency_fields_succeed(self):
+        """Tests a successful autocomplete request."""
         self.add_agencies()
         field_mapping = {
-            "agencyName": "name",
-            "foiaEmail": "pra_email",
-            "agencyStreetAddress": "street_address",
-            "agencyZip": "zip_code",
-            "agencyMunicipality": "municipality",
+            k: v for k, v in templating.ENTITY_MAPPING.items() if v != "state"
         }
         sample_response = Entity.objects.values(*field_mapping.values()).first()
         expected_json = {
             field: sample_response[field_mapping[field]] for field in field_mapping
         }
         # add in this field (which isn't part of query)
-        expected_json["agencyState"] = None
+        expected_json["agencyState"] = Entity.objects.get(
+            pra_email=expected_json["foiaEmail"]
+        ).state.abbr
         for field in field_mapping.keys():
             response = self.client.get(
                 "/api/current-user/autocomplete/agencies",
@@ -205,7 +225,10 @@ class AgencyTestCase(FoiaAPITestCase):
 
 
 class SourceAgencyRequest(FoiaAPITestCase):
+    """Tests the API call that gets public records sources for an entity."""
+
     def setUpEntity(self):
+        """Sets up a fake entity."""
         recipient = shared.generate_fake_foia_recipient(self.fake)
         recipient["agencyState"] = self.fake.random_element(State.objects.all()).abbr
         entity_dict = {v: recipient[k] for k, v in templating.ENTITY_MAPPING.items()}
@@ -214,6 +237,12 @@ class SourceAgencyRequest(FoiaAPITestCase):
         return entity
 
     def setUpSource(self, entity, is_records_officer=True):
+        """Sets up a fake source.
+
+        Args:
+            entity: An Entity object.
+            is_records_officer: Whether the source is a records officer.
+        """
         recipient = shared.generate_fake_foia_recipient(self.fake)
         return Source.objects.create(
             user=self.user,
@@ -224,6 +253,7 @@ class SourceAgencyRequest(FoiaAPITestCase):
         )
 
     def send_get(self, params):
+        """Runs a GET method no the autocomplete sources API."""
         url = "/api/current-user/autocomplete/sources"
         return self.client.get(url, params)
 
@@ -236,6 +266,7 @@ class SourceAgencyRequest(FoiaAPITestCase):
         assert bad_params.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_sources_request(self):
+        """Tests successful sources autocomplete API."""
         self.setupUser()
         first_entity = self.setUpEntity()
         resp = self.send_get({"agency": first_entity.pra_email})
@@ -256,7 +287,18 @@ class SourceAgencyRequest(FoiaAPITestCase):
 
 
 class FoiaRequestTestCase(FoiaAPITestCase):
+    """Tests the API for filing/saving FOIA Requests."""
+
     def build_post_data(self, request=None, recipients=None):
+        """Builds data for client.post.
+
+        Both request and recipients will be set to defaults
+        if set to None.
+
+        Args:
+            request: The requestContent value of the POST request
+            recipients: The recipientContent of the POST request
+        """
         if request is None:
             request = {k: "" for k in templating.REQUEST_MAPPING}
         if recipients is None:
@@ -273,15 +315,18 @@ class FoiaRequestTestCase(FoiaAPITestCase):
         )
 
     def send_post(self, post_data, post_type="save"):
+        """Sends the POST request."""
         url = f"/api/current-user/foia/{post_type}"
         return self.client.post(url, post_data, content_type="application/json")
 
     def generate_recipient(self):
+        """Generates a fake recipient for the request."""
         recipient = shared.generate_fake_foia_recipient(self.fake)
         recipient["agencyState"] = self.fake.random_element(State.objects.all()).abbr
         return recipient
 
     def valid_request(self):
+        """A mock (valid) public records requestContent object."""
         return {
             "subject": "Example Requests",
             "requestedRecords": "Everything",
@@ -290,10 +335,7 @@ class FoiaRequestTestCase(FoiaAPITestCase):
         }
 
     def test_api_requires_google(self):
-        """Because this API allows you to actually send FOIA requests,
-        you need to be hooked up to a Google account (to send email through).
-
-        This makes sure the API requires that."""
+        """Makes sure you need a Google login to use the API."""
         post_data = self.build_post_data()
         no_login = self.send_post(post_data)
         assert no_login.status_code == status.HTTP_403_FORBIDDEN
@@ -305,6 +347,7 @@ class FoiaRequestTestCase(FoiaAPITestCase):
         assert logged_in.status_code == status.HTTP_200_OK
 
     def test_blank_form_causes_submission_error(self):
+        """Makes sure submitting a blank FOIA request form raises errors."""
         post_data = self.build_post_data()
         self.setupUser(link_google=True)
         response = self.send_post(post_data).data
@@ -315,6 +358,7 @@ class FoiaRequestTestCase(FoiaAPITestCase):
         assert recipient_errors == frozenset({"foiaEmail", "agencyName"})
 
     def check_results(self, recipient, request):
+        """A generic method for validating a particular request."""
         agency = Entity.objects.get(pra_email=recipient["foiaEmail"])
         source = Source.objects.get(
             entity=agency,
@@ -331,6 +375,7 @@ class FoiaRequestTestCase(FoiaAPITestCase):
         return request.first()
 
     def test_sending_form_creates_new_records(self):
+        """The save request option should create a database records of a new request."""
         self.setupUser(link_google=True)
         assert Entity.objects.count() == 0
         recipient = self.generate_recipient()
@@ -345,8 +390,7 @@ class FoiaRequestTestCase(FoiaAPITestCase):
         self.check_results(recipient, request)
 
     def test_sending_multiple_recipients_saves_multiple_requests(self):
-        """If you send multiple recipients through the form,
-        you should create multiple RequestItems."""
+        """If you send multiple recipients through the form, you should create multiple RequestItems."""
         self.setupUser(link_google=True)
         recipients = [self.generate_recipient(), self.generate_recipient()]
         request = self.valid_request()
@@ -361,8 +405,7 @@ class FoiaRequestTestCase(FoiaAPITestCase):
             self.check_results(recipient, request)
 
     def test_successful_entity_but_source_error(self):
-        """If you have an entity that exists but have an error in the form submission,
-        you should get specified source errors."""
+        """If you have an entity that exists but have an error in the form submission, you should get specified source errors."""
         self.setupUser(link_google=True)
         recipient = self.generate_recipient()
         # first name is required
@@ -396,8 +439,7 @@ class FoiaRequestTestCase(FoiaAPITestCase):
         assert created_request.agency == entity
 
     def test_nonexistent_entity_but_existing_source(self):
-        """If the entity is nonexistent for some reason,
-        the source should be nonexistent + you should get helpful messages about the source errors."""
+        """If the entity is nonexistent for some reason, the source should be nonexistent + you should get helpful messages about the source errors."""
         self.setupUser(link_google=True)
         recipient = self.generate_recipient()
         for field in ["recipientFirstName", "foiaEmail"]:
@@ -410,7 +452,7 @@ class FoiaRequestTestCase(FoiaAPITestCase):
         assert frozenset(response["recipientErrors"][0].keys()) == error_fields
 
     def test_bad_request(self):
-        """Bad requests should return 400 errors"""
+        """Bad requests should return 400 errors."""
         self.setupUser(link_google=True)
         blank_request = json.loads(self.build_post_data())
         bogus_formatting = [

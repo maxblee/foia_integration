@@ -15,7 +15,7 @@ Object.freeze(init)
 
 const errorInit = {
   requestErrors: {},
-  recipientErrors: [{}]
+  recipientErrors: [{}],
 }
 
 function createSources() {
@@ -40,25 +40,30 @@ function createSources() {
 
 function createErrorDict() {
   const { subscribe, update } = writable(Object.assign({}, errorInit))
-  const addItem = () => update((n) => {
-    return {
-      requestErrors: n.requestErrors,
-      recipientErrors: [...n.recipientErrors, {}]
-    }
-  })
-  const deleteItem = (idx) => update((n) => {
-    const recip = n.recipientErrors
-    return {
-      requestErrors: n.requestErrors,
-      recipientErrors: [...recip.slice(0, idx), ...recip.slice(idx + 1, recip.length)]
-    }
-  })
+  const addItem = () =>
+    update((n) => {
+      return {
+        requestErrors: n.requestErrors,
+        recipientErrors: [...n.recipientErrors, {}],
+      }
+    })
+  const deleteItem = (idx) =>
+    update((n) => {
+      const recip = n.recipientErrors
+      return {
+        requestErrors: n.requestErrors,
+        recipientErrors: [
+          ...recip.slice(0, idx),
+          ...recip.slice(idx + 1, recip.length),
+        ],
+      }
+    })
   const changeAll = (errorData) => update(() => errorData)
   return {
     subscribe,
     addItem,
     deleteItem,
-    changeAll
+    changeAll,
   }
 }
 

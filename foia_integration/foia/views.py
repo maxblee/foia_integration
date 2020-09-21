@@ -1,3 +1,7 @@
+"""Views for FOIA.
+
+This deals with HTML views for `foia`. API views are in `foia.api`.
+"""
 import re
 from urllib.parse import urlencode
 
@@ -16,7 +20,7 @@ from foia.models import State, PRATemplate
 
 
 def app_index(request):
-    """The index page"""
+    """The index page."""
     extra_context = {}
     gmail_service = auth.get_user_service(request.user)
     if request.user.is_authenticated:
@@ -40,7 +44,7 @@ def app_index(request):
 
 @user_passes_test(auth.user_has_gmail, login_url="/")
 def template_render(request):
-    """Renders the template builder"""
+    """Renders the template builder."""
     context = {}
     if request.POST:
         template_text = request.POST.get("template-text")
@@ -68,6 +72,7 @@ def template_render(request):
 
 @user_passes_test(auth.user_has_gmail, login_url="/")
 def file_requests(request):
+    """View for the form to send and save requests."""
     context = {}
     # the Django docs discourage using slices for single item val
     user_templates = PRATemplate.objects.filter(template_user=request.user)[:1]

@@ -1,5 +1,4 @@
-"""
-ASGI config for foia_integration project.
+"""ASGI config for foia_integration project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 

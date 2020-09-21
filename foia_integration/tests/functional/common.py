@@ -1,3 +1,4 @@
+"""Common utilities for use solely in functional tests."""
 import os
 from urllib.parse import urljoin, urlsplit, parse_qs
 
@@ -15,14 +16,15 @@ REQUIRES_GOOGLE = ["template", "foia-request"]
 
 
 def get_urls(base_url, url_names):
-    """Returns a list of URLS and their relative paths,
-    given the name of the url (e.g. 'index')
-    and the starting url (e.g. localhost:8000).
+    """Returns a list of URLS and their relative paths.
+
+    Takes the name of the url (e.g. 'index') and the starting url (e.g. localhost:8000).
 
     Args:
         base_url: The starting URL (e.g. localhost)
         url_names: A list of names of URL deciphered by django's url reverse
             (e.g. REQUIRES_GOOGLE)
+
     Returns:
         A list of tuples of (relative path from base URL, full URL)
     """
@@ -32,11 +34,11 @@ def get_urls(base_url, url_names):
 
 
 def login_google(browser, go_home=True):
-    """Logs in through your Google account (given you're at a given website)
+    """Logs in through your Google account (given you're at a given website).
 
     Args:
         browser: selenium browser
-        go_start: True if you want to go back to the starting page on successful log in.
+        go_home: True if you want to go back to the starting page on successful log in.
     """
     if any(
         [
@@ -70,9 +72,9 @@ def login_google(browser, go_home=True):
 
 
 def check_redirect(test_client, url, rel_path, end_url):
-    """Convenience metric for two redirect tests. Checks to make sure
-    redirect goes to base_url and has follow
-    parameter back to the url.
+    """Convenience metric for two redirect tests.
+
+    Makes sure directs go to the end_url and then to the rel_path.
 
     Args:
         test_client: A Django test client instance
@@ -80,6 +82,7 @@ def check_redirect(test_client, url, rel_path, end_url):
         rel_path: the relative path to the url
         end_url: the relative path (from the base url) you want the redirect
             to go to (e.g. '/' for home)
+
     Raises:
         AssertionError if the url does not redirect,
             if the client redirects but not to the end_url,

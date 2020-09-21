@@ -1,3 +1,4 @@
+"""Tests the template building app at '/template-builder'."""
 from urllib.parse import urljoin
 
 import bs4
@@ -32,8 +33,7 @@ template_path = reverse("template")
 def test_user_can_create_templates(
     state, language, unique_field, mock_google_login, live_server, base_db
 ):
-    """Tests the base functionality of the templating tool: That someone
-    who is logged in can create a template."""
+    """Tests the base functionality of the templating tool: That someone who is logged in can create a template."""
     client, user = mock_google_login
     response = client.post(
         urljoin(live_server.url, template_path),
@@ -58,9 +58,12 @@ def test_user_can_create_templates(
     ],
 )
 def test_template_errors(template, mock_google_login, live_server, base_db):
-    """Submitting the form without any requested records,
-    with an incorrect field, or submitting an empty string
-    should result in an error."""
+    """Submitting a bad form results in an error.
+
+    These errors include submitting the form without
+    specifying where requested records go, submitting it
+    with a field that doesn't exist, or submitting an empty string.
+    """
     client, user = mock_google_login
     response = client.post(
         urljoin(live_server.url, template_path),
@@ -73,9 +76,7 @@ def test_template_errors(template, mock_google_login, live_server, base_db):
 
 
 def test_long_input_extends_container_height(selenium, live_server, base_db):
-    """If a user enters a ton of text into the template container, the container
-    should expand in size.
-    """
+    """If a user enters a ton of text into the template container, the container should expand in size."""
     selenium.get(urljoin(live_server.url, template_path))
     login_google(selenium, go_home=False)
     input_elem = selenium.find_element_by_id("template-input")
@@ -87,10 +88,11 @@ def test_long_input_extends_container_height(selenium, live_server, base_db):
 
 
 def test_entering_text_updates_preview(selenium, live_server, base_db):
-    """Entering keys in text should update the preview for the test
+    """Entering keys in text should update the preview for the test.
 
     Specifically: you should be able to add and delete items using keys
-    or the buttons and make the input reflect that."""
+    or the buttons and make the input reflect that.
+    """
     selenium.get(urljoin(live_server.url, template_path))
     login_google(selenium, go_home=False)
     text_input = selenium.find_element_by_id("template-input")

@@ -83,15 +83,14 @@
 <div id="request" class="request__container">
   <div class="subject__line">
     <label for="id_subject-line">
-      Subject
-      <span class="required" />
+      Subject <span class="required" />
       {#if subjectErrors}
-    <div class="request__errors">
-      {#each subjectErrors as err}
-      <div class="request__error form__error__item">{err}</div>
-      {/each}
-    </div>
-    {/if}
+        <div class="request__errors">
+          {#each subjectErrors as err}
+            <div class="request__error form__error__item">{err}</div>
+          {/each}
+        </div>
+      {/if}
     </label>
     <input
       on:input={(e) => handleInput(e, 'subject')}
@@ -101,15 +100,14 @@
   </div>
   <div class="records">
     <label for="id_requestedRecords">
-      Records Sought
-      <span class="required" />
+      Records Sought <span class="required" />
       {#if recordsErrors}
-    <div class="request__errors">
-      {#each recordsErrors as err}
-      <div class="request__error form__error__item">{err}</div>
-      {/each}
-    </div>
-    {/if}
+        <div class="request__errors">
+          {#each recordsErrors as err}
+            <div class="request__error form__error__item">{err}</div>
+          {/each}
+        </div>
+      {/if}
     </label>
     <textarea
       on:input={(e) => textAreaInput(e, 'requestedRecords')}
@@ -119,11 +117,11 @@
   <div class="fee-waiver">
     <label for="id_feeWaiver">Fee Waiver Justification<span class="optional" /></label>
     {#if feeWaiverErrors}
-    <div class="request__errors">
-      {#each feeWaiverErrors as err}
-      <div class="request__error form__error__item">{err}</div>
-      {/each}
-    </div>
+      <div class="request__errors">
+        {#each feeWaiverErrors as err}
+          <div class="request__error form__error__item">{err}</div>
+        {/each}
+      </div>
     {/if}
     <textarea
       on:input={(e) => textAreaInput(e, 'feeWaiver')}
@@ -133,11 +131,11 @@
   <div class="expedited-processing">
     <label for="id_expeditedProcessing">Justification for Expedited Processing<span class="optional" /></label>
     {#if expeditedErrors}
-    <div class="request__errors">
-      {#each expeditedErrors as err}
-      <div class="request__error form__error__item">{err}</div>
-      {/each}
-    </div>
+      <div class="request__errors">
+        {#each expeditedErrors as err}
+          <div class="request__error form__error__item">{err}</div>
+        {/each}
+      </div>
     {/if}
     <textarea
       on:input={(e) => textAreaInput(e, 'expeditedProcessing')}

@@ -1,12 +1,13 @@
 # `foia_integration`
 
-This is a Django project designed to help journalists file and manage their public records requests. It's ported over from [`django_sourcebook`](https://github.com/maxblee/django_sourcebook), a hastily built tool that does much of the same thing. Eventually, once I finish building `foia_integration`, `django_sourcebook` will cease to exist.
+This is a Django project designed to help journalists file and manage their public records requests. It's ported over from [`django_sourcebook`](https://github.com/maxblee/django_sourcebook), a quickly built prototype that does much of the same thing. Eventually, once I finish building `foia_integration`, `django_sourcebook` will cease to exist.
 
 ## Contents
 - [Motivation](#motivation)
 - [Setup](#setup)
 - [Features](#features)
 - [Roadmap](#roadmap)
+- [Credits](#credits)
 
 ## Motivation
 
@@ -16,7 +17,7 @@ One is [foiamail](https://github.com/bettergov/foiamail), which allows people to
 
 Another is [Muckrock](https://www.muckrock.com/), which offers paid plans that allow journalists to file a limited number of public records requests with a friendly UI, paid support, and more.
 
-And there are others, like a [GMail sender from the Miami Herald](https://github.com/mcclatchy/gun-deaths) that are designed specifically for filing requests in a single project.
+And there are others, like a [GMail sender from the Miami Herald](https://github.com/mcclatchy/gun-deaths) that were specifically built for filing requests in a single project.
 
 `foia_integration` is meant to serve as a bridge between the single-project, programmatic tools like `foiamail` and the single-request, service-oriented tool in Muckrock.
 
@@ -24,7 +25,7 @@ It is designed for general-purpose use and can handle single public records requ
 
 In addition, I plan on adding utilities to allow people to connect requests with contact logs, sourcebooks, and projects to make managing public records requests easier.
 
-The result is a project that is a bit less suited for large bulk records requests than `foiamail` and far less suited for requests directed at a single agency than a paid service like Muckrock. (In particular, `foiamail` is designed in a way that allows it to be effectively served from a cloud server like an EC2 running on `cron`.) In other words, you might be better off using one of those tools.
+The result is a project that is a bit less suited for large bulk records requests than `foiamail` and far less suited for requests directed at a single agency than a paid service like Muckrock. (In particular, `foiamail` is designed in a way that allows it to be effectively served from a cloud server like an EC2 running on `cron`.) In other words, if you're dealing with a single projct where you have to keep track of tons of requests, you'll be better off using `foiamail`, and if you're just going to be filing occasional requests, you're going to be better off using Muckrock. (Additionally, there are currently holes in this project, so if you want something that works well for your needs out of the box right now, you'll want to go to one of those other tools.)
 
 ## Setup
 
@@ -40,7 +41,7 @@ to start the server and run your site.
 
 When you load the URL (127.0.0.1:8000 by default), you should see a login page. (**Note: Be sure to be at 127.0.0.1 and not localhost; Google's login does not recognize the two domains as being the same.**)
 
-Click the login account and sign in with your Google Account.
+Click one of the log in links on the home page and sign in with your Google Account.
 
 ## Features
 
@@ -93,3 +94,11 @@ Because this project is in its infancy, there are a number of features I'd like 
 - Scheduling: I want to add support to allow people to schedule requests to be sent at certain times. For instance, you may want to schedule requests for FOIA logs at the end of every year. 
 - Groupings: I want to add support for people to create "Groups" of agencies they want to send requests to regularly. That would allow people to name the type of requests they're sending.
 - CRUD: Right now, I just have the "Create" part of the app build (and only some of that). I plan on adding search forms, along with options to delete and update data.
+
+## Credits
+
+This project was inspired or helped in ways by the following:
+
+- I borrowed some of the design of `foiamail` in this project. This project itself is also
+heavily inspired by `foiamail`.
+- I compiled the data on public records law response times from [Muckrock](https://www.muckrock.com/), [The Reporter's Committee for Freedom of the Press](https://www.rcfp.org/), and the [National Freedom of Information Coalition](https://www.nfoic.org/). All three are also great resources on state and national public records laws.

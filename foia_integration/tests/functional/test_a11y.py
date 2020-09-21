@@ -1,5 +1,6 @@
-"""Tests the accessibility of web pages across the FOIA site
-(does not include tests for django admin though tbh it probably should)
+"""Tests the accessibility of web pages across the FOIA site.
+
+(This does not include tests for django admin though tbh it probably should.)
 """
 import datetime
 import pathlib
@@ -12,8 +13,7 @@ AXE_REPORTS = pathlib.Path("reports/axe")
 
 
 def test_axe_a11y(selenium, live_server, base_db):
-    """Run generic accessibility tests, making sure there are
-    no obvious violations."""
+    """Run generic accessibility tests, making sure there are no obvious violations."""
     # first log into google so we can visit all the urls
     selenium.get(live_server.url)
     login_google(selenium)

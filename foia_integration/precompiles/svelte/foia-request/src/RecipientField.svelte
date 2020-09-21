@@ -207,11 +207,11 @@
     {start[fieldKey].text}
     <span class:optional={!required} class:required />
     {#if errorInfo}
-    <div class="recipient__errors">
-      {#each errorInfo as err}
-      <div class="recipient__error form__error__item">{err}</div>
-      {/each}
-    </div>
+      <div class="recipient__errors">
+        {#each errorInfo as err}
+          <div class="recipient__error form__error__item">{err}</div>
+        {/each}
+      </div>
     {/if}
   </label>
   {#if fieldType === 'select'}

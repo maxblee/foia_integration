@@ -1,5 +1,4 @@
-"""
-WSGI config for foia_integration project.
+"""WSGI config for foia_integration project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

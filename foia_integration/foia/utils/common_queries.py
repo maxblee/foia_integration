@@ -1,8 +1,11 @@
+"""A set of common filtering queries used across this application."""
+
 import functools
 from foia.models import State
 
 
 def order_states():
+    """Orders the states by abbreviation, with U.S. at the top."""
     return sorted(
         [
             {"abbr": state.abbr, "name": state.info.name}
@@ -13,7 +16,7 @@ def order_states():
 
 
 def state_ordering(a, b):
-    """Order states by abbreviation, but with United States at top"""
+    """Ordering function, for internal use by `order_states`."""
     if a["abbr"] == "US":
         return -1
     elif b["abbr"] == "US":

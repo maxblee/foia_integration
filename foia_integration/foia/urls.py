@@ -1,3 +1,7 @@
+"""URLS for the FOIA path.
+
+This includes HTML views (listed first) and API views.
+"""
 from django.urls import path, re_path
 from . import views, api
 
