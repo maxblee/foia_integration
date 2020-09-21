@@ -8,6 +8,10 @@ node_modules/
 
 # error logs from behave
 foia_integration/tests/reports/*
+# accessibility logs, HTML logs, etc
+foia_integration/reports/*
+
+.coverage
 
 __pycache__
 .DS_Store

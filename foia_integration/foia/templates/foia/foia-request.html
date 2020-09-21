@@ -1,0 +1,17 @@
+{% extends "base_generic.html" %}
+{% load static %}
+
+{% block page_title %}File Requests{% endblock %}
+
+{% block extra_heads %}
+<link rel="stylesheet" href="{% static 'css/foia-request.css' %}" />
+<script defer src="{% static 'js/foia-request.js' %}"></script>
+{% endblock %}
+
+{% block banner %}
+<h1>File Public Records Requests</h1>
+{% endblock %}
+
+{% block content %}
+    <div id="foia-request-items"></div>
+{% endblock %}

@@ -49,7 +49,20 @@
         <div class="banner__main">
             {% block banner %}{% endblock %}
         </div>
+        {% block message_container %}
+        <div class="message__container">
+            {% if messages %}
+            <ul class="messages">
+            {% for message in messages %}
+                <li {% if message.tags %} class="message__item {{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endblock %}
         {% block content %}{% endblock %}
     </main> 
 </body>
+{% block inline_scripts %}
+{% endblock %}
 </html>

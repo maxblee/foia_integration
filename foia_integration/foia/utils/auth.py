@@ -1,36 +1,53 @@
+"""Deals with authentication for foia_integration.
+
+Primarily, this involves GMail's authentication system.
+"""
+
 from allauth.socialaccount.models import SocialAccount, SocialToken, SocialApp
 from google.oauth2.credentials import Credentials
 import googleapiclient.discovery
-from django.http import HttpRequest
-from typing import Any, Dict, Optional
+from rest_framework import permissions
+
 
 def user_has_gmail(user):
-    """Tests whether a user has an attached GMail account."""
+    """Tests whether a user has an attached GMail account.
+
+    Args:
+        user: The user (or anonymous user) being tested for authentication.
+
+    Returns:
+        True if the user is authenticated and has an asssociated
+        email account, False otherwise.
+    """
     if not user.is_authenticated:
         return False
     google_user = SocialAccount.objects.filter(provider="google", user=user)
     return google_user.exists()
 
-def get_user_service(request: HttpRequest) -> Optional[googleapiclient.discovery.Resource]:
+
+def get_user_service(user):
     """Gets a GMAIL Service object given.
 
     Args:
-        request: A request from the initial view (whatever that is)
+        user: The current user (or anonymoususer)
+
     Returns:
         None if the user was not authenticated or if the user was not a Google user.
     """
-    if not request.user.is_authenticated:
+    if not user.is_authenticated:
         return None
     google_api = SocialApp.objects.get(provider="google")
     client_id = google_api.client_id
     client_secret = google_api.secret
     # need to use filter to check if exists; if the user doesn't exist
-    user = SocialAccount.objects.filter(provider="google", user_id=request.user.id)
+    user = SocialAccount.objects.filter(provider="google", user_id=user.id)
     if not user.exists():
         return None
     # NOTE: I don't believe there are cases where the user would have multiple accounts with the same provider but idk for sure
     google_user = user.first()
-    social_token = SocialToken.objects.filter(app_id=google_api.id, account_id=google_user.id)
+    social_token = SocialToken.objects.filter(
+        app_id=google_api.id, account_id=google_user.id
+    )
     if not social_token.exists():
         return None
     # The SocialToken is unique on account_id + usr_id
@@ -40,13 +57,25 @@ def get_user_service(request: HttpRequest) -> Optional[googleapiclient.discovery
     token_url = "https://accounts.google.com/o/oauth2/token"
     scopes = ["https://mail.google.com"]
     creds = Credentials(
-        auth_token, 
+        auth_token,
         refresh_token=refresh_token,
         token_uri=token_url,
-        client_id=client_id, 
-        client_secret=client_secret, 
-        scopes=scopes
+        client_id=client_id,
+        client_secret=client_secret,
+        scopes=scopes,
     )
     # TODO: Have better/more clear error handling for this, at least at view level
     service = googleapiclient.discovery.build("gmail", "v1", credentials=creds)
     return service, google_user.uid
+
+
+class GooglePermission(permissions.BasePermission):
+    """Permission check for GMail with rest_framework.
+
+    This is just a thin wrapper over `user_has_gmail` for
+    use in Django Rest Framework APIs.
+    """
+
+    def has_permission(self, request, view):
+        """Checks if user has GMail permissions."""
+        return user_has_gmail(request.user)

@@ -1,7 +1,8 @@
-"""foia_integration URL Configuration
+"""URL Configuration for `foia_integration.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.1/topics/http/urls/
+
 Examples:
 Function views
     1. Add an import:  from my_app import views
@@ -15,13 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import TemplateView
-
-from foia import views as app_views
 
 urlpatterns = [
-    path("", app_views.app_index, name="index"),
-    path('admin/', admin.site.urls),
+    path("", include("foia.urls")),
+    path("admin/", admin.site.urls),
     path("accounts", include("allauth.urls")),
-    path("template-builder", app_views.template_render, name="template")
 ]

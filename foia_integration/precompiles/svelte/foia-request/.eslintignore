@@ -1,0 +1,6 @@
+rollup.config.js
+public/
+scripts/
+jest.config.js
+babel.config.js
+test.js
